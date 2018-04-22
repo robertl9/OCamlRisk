@@ -1,0 +1,20 @@
+{
+	"countries": [{
+		"id": "Japan",
+		"neighbors": ["China"],
+		"continent": ["Asia"],
+		"player_id": ["Daenerys"]},
+
+		{"id": "China",
+		"neighbors": ["India, Japan"],
+		"continent": ["Asia"],
+		"player_id": ["Cersei"]},
+
+		{"id": "India",
+		"neighbors": ["China"],
+		"continent": ["Asia"],
+		"player_id": ["JonSnow"]},
+		],
+
+	"win_message": "Congratulations! You have conquered the world!"
+	}
