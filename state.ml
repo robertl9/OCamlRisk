@@ -1,10 +1,16 @@
 open Yojson.Basic.Util
-open Hashtbl
-open Random
 
-type country
+type country = {
+  country_id: string ;
+  exits: string list;
+  c_id: string ;
+}
 
-type continent
+type continent = {
+  continent_id : string ;
+  continent_list: string list;
+  bonus_troops: int
+}
 
 type character = JonSnow | DaenerysTargareyan | NightKing | Bran
 
@@ -15,21 +21,40 @@ type phase = Reinforce | Deploy | Attack
 type player = {
   character: character;
   continents: continent list;
-  countries: (country * int) list;
+  countries_held: (country * int) list;
   cards: card list;
 }
 
 type state = {
-  players: player list;
-  c_player: player;
+  players_list: player list;
+  characters_list: character list;
+  current_turn: string;               (* string representing id of character's turn *)
   c_phase: phase;
-  continents: (continent * (country * player list)) list;
+  continents: continent list;
+  countries: country list;
   card_l: card list;
+  num_troops_left: int;
+  phase: phase ;
+  fog_of_war: bool;
 }
 
 let roll n =
   let rl = [] in
-  for x=1 to n do (((Random.int 5) + 1)::rl) done
+  let rec roll_n n l =
+    if (n = 0) then (l) else (roll_n (n-1) ((Random.int 5 + 1)::l))
+  in roll_n n rl
+
+let roll_m n =
+  let rl = Array.make n 0 in
+  for i = 0 to n-1 do rl.(i)<-(Random.int 5 + 1) done
+
+let init_characters () =
+  let lst = Bran::NightKing::DaenerysTargareyan::JonSnow::[] in
+  lst
+
+let init_state file =
+
+  
 
 (* [taken s p] returns a list representing the countries in s
  * that are held by a player p
