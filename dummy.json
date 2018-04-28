@@ -1,19 +1,19 @@
 {
+	"continents": [
+		"Asia"
+	],
 	"countries": [{
 		"id": "Japan",
 		"neighbors": ["China"],
-		"continent": ["Asia"],
-		"player_id": ["Daenerys"]},
+		"continent": "Asia"},
 
 		{"id": "China",
 		"neighbors": ["India, Japan"],
-		"continent": ["Asia"],
-		"player_id": ["Cersei"]},
+		"continent": "Asia"},
 
 		{"id": "India",
 		"neighbors": ["China"],
-		"continent": ["Asia"],
-		"player_id": ["JonSnow"]},
+		"continent": "Asia"},
 		],
 
 	"win_message": "Congratulations! You have conquered the world!"
