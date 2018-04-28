@@ -1,6 +1,7 @@
 {
-	"continents": [
-		"Asia"
+	"continents": [{
+		"id": "Asia",
+		"bonus": 5}
 	],
 	"countries": [{
 		"id": "Japan",
