@@ -115,6 +115,12 @@ let draw_card st =
   let _ = player.cards <- c::player.cards in
   let _ = st.players_list <- (player::pl) in st
 
+let rec max_e l =
+  match l with
+  | [] -> failwith "Invalid Roll"
+  | h::[] -> h
+  | h::t -> max h (max_e t)
+
 let conquer a d pl c t st =
   let f (k,v) = k <> c in
   let _ = a.countries_held <- ((c,t)::a.countries_held) in
@@ -135,7 +141,24 @@ let attack c c2 st =
       then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
       else dec_troop c2 st (* Decrement Defense Troop *)
     else dec_troop c st (* Decerement Attack Troop *)
-  | [|x; x'|], [|x2|] -> 
+  | [|x; x'|], [|x2|] -> let max_x = max_e [x;x'] in
+    if max_x > x2
+    then if d_troops = 1
+      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      else dec_troop c2 st (* Decrement Defense Troop *)
+    else dec_troop c st (* Decerement Attack Troop *)
+  | [|x; x'; x''|], [|x2|] -> let max_x = max_e [x;x';x''] in
+    if max_x > x2
+    then if d_troops = 1
+      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      else dec_troop c2 st (* Decrement Defense Troop *)
+    else dec_troop c st (* Decerement Attack Troop *)
+  | [|x|], [|x2; x2'|] -> let max_x = max_e [x2;x2'] in
+    if x > max_x
+    then dec_troop c2 st (* Decrement Defense Troop *)
+    else dec_troop c st (* Decerement Attack Troop *)
+  | [|x; x'|], [|x2; x2'|] ->
+  | [|x; x'; x''|], [|x2; x2'|] ->
   | _, _ -> failwith "Program Failure"
 
 
