@@ -7,7 +7,9 @@ type country
  * troops on that location.
 *)
 type actions = Deploy of (int * country) | 
-               Reinforce of (int * country) | Attack of country | End 
+               Reinforce of (int * country * country) | Attack of (country*country) | End 
+               | Quit | Ally of string | Inv | Error of string
+               
 type command = actions
 
 (* [parse str] is the command that represents player input [str].

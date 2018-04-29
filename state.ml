@@ -68,6 +68,9 @@ let rec get_player p pl npl =
   | [] -> failwith "Invalid Player"
   | h::t -> if h.id = p then h, t@npl else get_player p t (h::npl)
 
+let get_country str_country state = 
+  List.find (fun x -> x = str_country) state.countries
+
 let rec get_defender c pl npl =
   let f x (k,v) = if c = k then true else x || false in
   match pl with
@@ -161,6 +164,29 @@ let attack c c2 st =
   | [|x; x'; x''|], [|x2; x2'|] ->
   | _, _ -> failwith "Program Failure"
 
+let deploy num str state = 
+  let current_plyr = get_player state.c_turn state.players_list [] in 
+  let ctry = get_country str state in 
+
+  (* check to see if current player already has country 
+   * if not, add that country to 
+   *)
+   if List.mem_assoc ctry current_plyr.countries_held 
+   then current_plyr.countries_held <- (ctry, (List.assoc ctry current_plyr.countries_held + num))
+      ::(List.remove_assoc ctry current_plyr.countries_held) 
+   else current_plyr.countries_held <- (ctry, num)::(current_plyr.countries_held)
+
+
+(*changes the game state based on the GUI input*)
+let do' act state = 
+  match act with
+  | Attack(ctr1, ctr2) -> attack ctr1 ctr2 state
+  | Deploy(num, ctr) -> deploy num ctr state
+  (*| Ally(str) -> ally str state
+  | Reinforce(num, str1, str2) -> reinforce num str1 str2 state
+  | Quit -> quit_helper "quit" state 
+  | Inv -> inv_helper "inv" state  *)
+  | _ -> failwith "Action not implemented"
 
 
 (* [taken s p] returns a list representing the countries in s
@@ -208,3 +234,10 @@ let attack c c2 st =
 (* [cards_free s] returns a list of cards not held by any player
  *)
 (* val cards_free: state -> string list *)
+
+
+
+
+
+
+
