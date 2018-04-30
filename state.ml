@@ -8,7 +8,7 @@ type country = {
 
 type continent = {
   continent_id : string ;
-  continent_list: string list;
+  country_list: string list;
   bonus_troops: int
 }
 
@@ -164,26 +164,34 @@ let attack c c2 st =
   | [|x; x'; x''|], [|x2; x2'|] ->
   | _, _ -> failwith "Program Failure"
 
-let deploy num str state = 
-  let current_plyr = get_player state.c_turn state.players_list [] in 
-  let ctry = get_country str state in 
+let deploy str_country state = 
+  let current_plyr = fst (get_player state.c_turn state.players_list []) in 
+  let ctry = get_country str_country state in 
 
   (* check to see if current player already has country 
-   * if not, add that country to 
+   * if not, add that country to countries held
    *)
    if List.mem_assoc ctry current_plyr.countries_held 
-   then current_plyr.countries_held <- (ctry, (List.assoc ctry current_plyr.countries_held + num))
-      ::(List.remove_assoc ctry current_plyr.countries_held) 
-   else current_plyr.countries_held <- (ctry, num)::(current_plyr.countries_held)
+   then inc_troop ctry state
+   else current_plyr.countries_held <- (ctry, 1)::(current_plyr.countries_held)
 
+let reinforce num str_country_dec str_country_inc state = 
+  let ctry_dec = get_country str_country_dec state in 
+  let ctry_inc = get_country str_country_inc state in 
+
+  (* check to see if they're neighbors *)
+
+  let _ = for x = num downto 0 do inc_troop ctry_inc state done in 
+  let _ = for x = num downto 0 do dec_troop ctry_dec state done 
 
 (*changes the game state based on the GUI input*)
 let do' act state = 
   match act with
   | Attack(ctr1, ctr2) -> attack ctr1 ctr2 state
-  | Deploy(num, ctr) -> deploy num ctr state
-  (*| Ally(str) -> ally str state
-  | Reinforce(num, str1, str2) -> reinforce num str1 str2 state
+  | Deploy(num, ctr) -> deploy ctr state
+  | Reinforce(num, ctr1, ctr2) -> reinforce num str1 str2 state
+(*)
+  | Ally(str) -> ally str state
   | Quit -> quit_helper "quit" state 
   | Inv -> inv_helper "inv" state  *)
   | _ -> failwith "Action not implemented"
