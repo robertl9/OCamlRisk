@@ -1,4 +1,26 @@
-open GMain
+
+
+
+
+let main () =
+let window = GWindow.window ~border_width:20 ~title:"Risk" () in
+let box1 = GPack.vbox ~border_width: 20 ~packing:window#add () in
+let box2 = GPack.hbox ~border_width: 20 ~packing:box1#add () in
+let box3 = GPack.hbox ~border_width: 20 ~packing:box1#add () in
+let twoPlayer = GButton.button ~label:"2 Players" ~packing:box2#pack () in
+let threePlayer = GButton.button ~label:"3 Players" ~packing:box2#pack () in
+let fourPlayer = GButton.button ~label:"4 Players" ~packing:box3#pack () in
+let fivePlayer = GButton.button ~label:"5 Players" ~packing:box3#pack () in
+
+  window#show ();
+  GMain.Main.main ()
+
+let _ = main ()
+
+
+
+
+(* open GMain
 open GdkKeysyms
 
 let locale = GtkMain.Main.init ()
@@ -29,4 +51,5 @@ let main () =
   window#show ();
   Main.main ()
 
-let () = main ()
+
+let () = main () *)
