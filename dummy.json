@@ -15,8 +15,8 @@
 
 		{"id": "India",
 		"neighbors": ["China"],
-		"continent": "Asia"},
+		"continent": "Asia"}
 		],
-
+	"fog_of_war": "false",
 	"win_message": "Congratulations! You have conquered the world!"
 	}
