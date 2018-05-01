@@ -334,10 +334,23 @@ let quit_helper st =
   let _ = st.players_list <- List.filter (fun x -> x != player) st.players_list
   in st
 
+let rec string_of_dict d s =
+  match d with
+  | [] -> s
+  | (k,v)::t -> string_of_dict t ((string_of_int v)^" troops in "^k^"\n")
+
+let rec string_of_list l s =
+  match l with
+  | [] -> s
+  | h::t -> string_of_list t (s^h^"\n")
+
 let print_state st =
   let s = ref "Players are:" in
   for i = 0 to (Array.length st.turns)-1 do s := !s ^ " " ^ (st.turns.(i)) done;
-  s := !s ^ ". It is currently " ^ st.c_turn ^ "\'s turn. "; !s
+  s := !s ^ ". It is currently " ^ st.c_turn ^ "\'s turn.\n";
+  let p, _ = get_player st.c_turn st.players_list [] in
+  s := !s ^ "Player has:\n" ^ (string_of_dict (p.countries_held) "");
+  s := !s ^ "Countries availble:\n" ^ (string_of_list st.unclaimed "");!s
 
 (*changes the game state based on the GUI input*)
 let do' act state =
