@@ -13,7 +13,7 @@ let rec updateTerm state =
   let cmd = parse(read_line()) in
   let updatedState = (do' cmd state) in
   match cmd with
-  |Quit -> ()
+  |QuitC -> ()
   |_->updateTerm updatedState
   (* if(quitting updatedState) then () else interactWithTerm updatedState *)
 

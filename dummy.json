@@ -2,7 +2,7 @@
 	"continents": [{
 		"id": "Asia",
 		"countries": ["Japan", "China", "India"],
-		"bonus": 5}
+		"bonus": "5"}
 	],
 	"countries": [{
 		"id": "Japan",
