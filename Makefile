@@ -7,7 +7,9 @@ clean:
 
 play: 
 	rm -f gui && rm -f gui.cmo && rm -f gui.cmi && ocamlbuild -use-ocamlfind main.byte && ./main.byte
-	
+
+test:	
+	ocamlbuild -use-ocamlfind tests.byte && tests.byte
 	
 
 
