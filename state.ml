@@ -366,11 +366,33 @@ let do' act state =
   (* | InvC -> inv_helper state *)
   | _ -> let _ = state.repl_msg <- "Command Currently Unavailable" in state
 
+let taken_by state plyr =
+  List.map (fun (a,_) -> a) plyr.countries_held
 
-  (* [taken s p] returns a list representing the countries in s
-   * that are held by a player p
-   *)
-  (* val taken_by: state -> player -> string list *)
+let available state =
+  state.unclaimed
+
+let exits cntry =
+  cntry.neighbors
+
+let win state =
+  let plyrs = state.players_list in
+  let total_countries = List.length state.countries in
+  let rec helper players =
+    match players with
+    | [] -> false
+    | h::t -> if List.length h.countries_held = total_countries then true
+      else helper t
+  in helper plyrs
+
+let cards_owned plyr = plyr.cards
+
+let cards_free state = state.card_l
+
+(* [taken s p] returns a list representing the countries in s
+* that are held by a player p
+*)
+(* val taken_by: state -> player -> string list *)
 
 
   (* [available s] is a list of countries
