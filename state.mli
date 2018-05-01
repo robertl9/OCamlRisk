@@ -47,7 +47,7 @@ val exits: country -> string list
 val win: state -> bool
 
 (* [cards_owned p] returns a list of strings representing cards owned by p*)
-val cards_owned: player -> string list
+val cards_owned: player -> card list
 
 (* [remove_card s c] returns a state that has a
  * a card list that does not contain c
@@ -56,9 +56,11 @@ val cards_owned: player -> string list
 
 (* [cards_free s] returns a list of cards not held by any player
  *)
-val cards_free: state -> card list
+val cards_free: state -> card array
 
 val get_cplayer: state -> string
+
+val get_player_of_state: state -> player 
 
 val print_state: state -> string
 
