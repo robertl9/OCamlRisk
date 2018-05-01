@@ -58,6 +58,10 @@ type card
  *)
 (* val cards_free: state -> string list *)
 
+val get_cplayer: state -> string
+
+val print_state: state -> string
+
 val do': Command.command -> state -> state
 
 val get_msg: state -> string

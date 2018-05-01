@@ -9,7 +9,8 @@ let rec updateTerm state =
   ANSITerminal.(print_string [green](get_msg state));
   print_endline"";
   (* if(score state >= win_score state) then print_endline (winningMessage state); *)
-  print_string  "> ";
+  print_string ((print_state state)^"\n");
+  print_string ("Player " ^ (get_cplayer state) ^ ": > ");
   let cmd = parse(read_line()) in
   let updatedState = (do' cmd state) in
   match cmd with

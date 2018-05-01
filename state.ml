@@ -31,10 +31,12 @@ type player = {
 type state = {
   mutable players_list: player list;
   mutable c_turn: string;
+  mutable turns: string array;
+  mutable turn: int;
   mutable c_phase: phase;
   continents: continent list;
   countries: country list;
-  mutable unclaimed: country list;
+  mutable unclaimed: string list;
   mutable card_l: card array;
   fog_of_war: string;
   mutable repl_msg: string;
@@ -89,14 +91,19 @@ let rec players n l =
     let npl = player::l in
     players (n-1) npl
 
+let order n =
+  let ol = Array.make n "" in
+  for i = 0 to n-1 do ol.(i)<-(string_of_int (i+1)) done; ol
+
 let init_state n j =
   let continents = j|> member "continents" |> to_list |> List.map to_continents in
   let countries = j|> member "countries" |> to_list |> List.map to_countries in
-  let repl_msg = "Welcome to Risk! Your game creator will be Milan!" in
+  let u_countries = let f x = (String.uppercase_ascii x.country_id) in List.map f countries in
+  let repl_msg = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!" in
   let fog_of_war = j |> member "fog_of_war" |> to_string in
   let win = j|> member "win_message" |> to_string in
-  {players_list = players n []; c_turn = "1"; c_phase = Start;
-   continents = continents; countries = countries; unclaimed = countries;
+  {players_list = players n []; c_turn = "1"; turns = order n; turn = 0; c_phase = Start;
+   continents = continents; countries = countries; unclaimed = u_countries;
    card_l = init_cards (); fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
 (* "Welcome to Risk!" *)
 
@@ -110,15 +117,27 @@ let rec get_player p pl npl =
   | [] -> failwith "Invalid Player"
   | h::t -> if h.id = p then h, t@npl else get_player p t (h::npl)
 
+let get_cplayer st =
+  st.c_turn
+
+let rec remove_l c l =
+  match l with
+  | [] -> l
+  | h::t -> if (h = c) then t else h::(remove_l c t)
+
 (* let rec continent countryl contnentl = *)
 
 let pick_country c st =
-  let player, pl = get_player st.c_turn st.players_list [] in
-  let _ = player.countries_held <- (c, 1)::player.countries_held in
-  (* let _ = *)
-  let _ = st.c_turn <- if st.c_turn == "2" then "1" else "2" in
-  let _ = st.repl_msg <- player.id ^ " has claimed " ^ c in
-  let _ = st.players_list <- (player::pl) in st
+  if (List.mem c st.unclaimed) then
+    let player, pl = get_player st.c_turn st.players_list [] in
+    let _ = player.countries_held <- (c, 1)::player.countries_held in
+    (* let _ = add continent if feasible *)
+    let _ = st.unclaimed <- (remove_l c st.unclaimed) in
+    let _ = st.turn <- st.turn + 1 in
+    let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
+    let _ = st.repl_msg <- player.id ^ " has claimed " ^ c in
+    let _ = st.players_list <- (player::pl) in st
+  else let _ = st.repl_msg <- "Invalid Country/Country Taken" in st
 
 let get_country str_country state =
     List.find (fun x -> x.country_id = str_country) state.countries
@@ -315,18 +334,24 @@ let quit_helper st =
   let _ = st.players_list <- List.filter (fun x -> x != player) st.players_list
   in st
 
+let print_state st =
+  let s = ref "Players are:" in
+  for i = 0 to (Array.length st.turns)-1 do s := !s ^ " " ^ (st.turns.(i)) done;
+  s := !s ^ ". It is currently " ^ st.c_turn ^ "\'s turn. "; !s
+
 (*changes the game state based on the GUI input*)
 let do' act state =
   match act with
-  | AttackC (ctr1, ctr2) -> attack ctr1 ctr2 state
-  | DeployC (num, ctr) -> for i = 0 to num-1 do inc_troop ctr state done; state
+  | AttackC (ctr1, ctr2) -> attack (String.uppercase_ascii ctr1) (String.uppercase_ascii ctr2) state
+  | DeployC (num, ctr) -> for i = 0 to num-1 do inc_troop (String.uppercase_ascii ctr) state done;
+    let _ = state.repl_msg <- (String.uppercase_ascii ctr) ^ " has gained " ^ string_of_int num ^ " troop!" in state
   (* | Reinforce (num, ctr1, ctr2) ->
      reinforce num (get_country ctr1 state) (get_country ctr2 state) state *)
   (* | Ally(str) -> ally str state *)
   | QuitC -> quit_helper state
-  | ClaimC (ctr) -> pick_country ctr state
+  | ClaimC (ctr) -> pick_country (String.uppercase_ascii ctr) state
   (* | InvC -> inv_helper state *)
-  | _ -> failwith "Action not implemented"
+  | _ -> let _ = state.repl_msg <- "Command Currently Unavailable" in state
 
 
   (* [taken s p] returns a list representing the countries in s
