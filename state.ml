@@ -229,7 +229,7 @@ let quit_helper state =
 
   (*free players properties, re-deploy to remaining players*)
   
-  let _ = state.players_list <- List.remove current_plyr 
+  let _ = state.players_list <- List.remove current_plyr state.players_list
 
 (*changes the game state based on the GUI input*)
 let do' act state = 
