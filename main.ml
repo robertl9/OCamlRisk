@@ -27,12 +27,12 @@ let play_game players =
  * You are welcome to improve the user interface, but it must
  * still prompt for a game to play rather than hardcode a game file. *)
 let main () =
-  ANSITerminal.(print_string [red]
-                  "\nWelcome to Risk.\n");
-  print_endline "Please enter the total number of human players (Between 2 and 5 inclusive).\n";
+  ANSITerminal.(print_string [yellow]
+                  "Welcome to Risk.\n");
+  print_endline "Please enter the total number of human players (Between 2 and 5 inclusive).";
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
-  | players -> play_game players
+  | players -> if String.lowercase_ascii(players) = "quit" then () else play_game players
 
 let () = main ()
