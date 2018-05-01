@@ -50,10 +50,15 @@ open Yojson.Basic.Util
   (* num of initial amount of troops allowed on board
    * subject to change
    *)
-  let init_troops = 30 
+  let init_troops = 30
 
   let get_msg st =
     st.repl_msg
+
+let head_of_lst lst =
+  match lst with
+  | [] -> []
+  | h::t -> h
 
   let init_characters () =
     [Bran; NightKing; DaenerysTargareyan; JonSnow]
@@ -68,7 +73,7 @@ open Yojson.Basic.Util
     let bmld = Array.append bml d in
     let deck = Array.append bmld wc in
     deck
-  
+
   (* take json element a and create continent record*)
   let to_continents a =
       let id = a |> member "id" |> to_string in
@@ -86,10 +91,14 @@ open Yojson.Basic.Util
   let init_state j =
     let continents = j|> member "continents" |> to_list |> List.map to_continents in
     let countries = j|> member "countries" |> to_list |> List.map to_countries in
+    let repl_msg = j |> member "repl_msg" |> to_string in
+    let fog_of_war = j |> member "fog_of_war" |> to_string in
     let win = j|> member "win_message" |> to_string in
     {players_list = []; c_turn = ""; c_phase = Start;
-     continents = continents; countries = countries; card_l = init_cards ();
-     fog_of_war = false; w_msg = win; repl_msg = "Welcome to Risk!"}
+     continents = continents; countries = countries; unclaimed = countries;
+     card_l = init_cards (); fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
+
+      (* "Welcome to Risk!" *)
 
 
   let add_player id character st =
@@ -221,60 +230,60 @@ open Yojson.Basic.Util
 
   let deploy ctry st =
     let player, pl = get_player st.c_turn st.players_list [] in
-  
+
     let _ = st.repl_msg <- st.c_turn ^ " deploys 1 troop on " ^ ctry.country_id in
 (*     check to see if current player already has country
      * if not, add that country to countries held *)
-    
+
      if List.mem_assoc ctry player.countries_held
-     then let st = inc_troop ctry st in 
+     then let st = inc_troop ctry st in
       let _ = st.c_phase <- Attack
-      in st 
-     else 
+      in st
+     else
       let _ = player.countries_held <- (ctry, 1)::(player.countries_held) in
       let _ = st.repl_msg <- player.id ^ " has claimed " ^ ctry.country_id in
-      let _ = st.players_list <- (player::pl) 
+      let _ = st.players_list <- (player::pl)
       let _ = st.c_phase <- Attack
       in st
 
 
- let claim c st =      
+ let claim c st =
     let player, pl = get_player st.c_turn st.players_list [] in
-    
-    if List.mem_assoc c player.countries_held then 
-      let st = inc_troop c st in 
+
+    if List.mem_assoc c player.countries_held then
+      let st = inc_troop c st in
       (*check num troop remaining, for now max initial troops is 30*)
       let troops_on_board = List.fold_left (+) 0 (List.map sum_troops st.players_list) in
-      if troops_on_board = init_troops then 
+      if troops_on_board = init_troops then
         let _ = st.c_phase <- Deploy in st
         (*let _ = st.c_turn <- "next person's player id" in *)
-      else st 
-    else 
-      let st = deploy c st in 
-      let troops_on_board = List.fold_left (+) 0 (List.map sum_troops st.players_list) in 
-      if troops_on_board = init_troops then 
+      else st
+    else
+      let st = deploy c st in
+      let troops_on_board = List.fold_left (+) 0 (List.map sum_troops st.players_list) in
+      if troops_on_board = init_troops then
         let _ = st.c_phase <- Deploy in
         let _ = st.unclaimed <- List.filter (fun x -> x != c) st.unclaimed in st
         (*let _ = st.c_turn <- "next person's player id" in *)
-      else st 
-  
+      else st
+
 
   let reinforce num country_dec country_inc st =
-  
+
     let player, pl = get_player st.c_turn st.players_list [] in
-  
-    let keep_in x = 
+
+    let keep_in x =
          (List.mem x (List.map (fun x -> (fst x).country_id) player.countries_held))
          in
 
     let rec update_troops str ctry num st =
       if num = 0 then st
       else
-       if str = "dec" then 
-        let new_st = dec_troop ctry st in 
+       if str = "dec" then
+        let new_st = dec_troop ctry st in
         update_troops str ctry (num - 1) new_st
-       else 
-        let new_st = inc_troop ctry st in 
+       else
+        let new_st = inc_troop ctry st in
         update_troops str ctry (num - 1) new_st in
 
     (* checks to see if a link exists between two countries *)
@@ -288,15 +297,15 @@ open Yojson.Basic.Util
           (* method would return false in match above
             before calling check_links with empty frontier *)
           | _ -> failwith "Program failure" in
-  
+
         (* adding neighboring countries to frontier that are not already in frontier,
          * that are held by current player, and that have not been visited yet*)
-        let new_frontier = 
+        let new_frontier =
           (List.filter (fun x -> (keep_in x)) popped.neighbors)
           @frontier in
         if popped.country_id = country_inc.country_id then true
         else check_links new_visited new_frontier in
-  
+
     (* if there's a link, reinforce, otherwise return error message*)
     if check_links [] [country_dec.country_id] then
       let st = update_troops "inc" country_inc num (update_troops "dec" country_dec num st) in
@@ -304,9 +313,9 @@ open Yojson.Basic.Util
       let _ = st.repl_msg <- st.c_turn ^ " moved "
         ^ string_of_int(num) ^ " " ^ str_troops ^ " from " ^ country_dec.country_id
         ^ " to " ^ country_inc.country_id in
-      let _ = st.c_phase <- Deploy  
+      let _ = st.c_phase <- Deploy
       (*change c_turn*)
-      in st 
+      in st
     else
       let _ = st.repl_msg <- "Cannot reinforce using these two countries. Try again!"
       in st
@@ -316,18 +325,18 @@ open Yojson.Basic.Util
   let inv_helper state =
     let current_plyr, pl = get_player state.c_turn state.players_list [] in
     let country_ids = List.map (fun x -> (fst x).country_id) current_plyr.countries_held in
-    let _ = state.repl_msg <- List.fold_left (^) "You own the following countries: " country_ids in 
+    let _ = state.repl_msg <- List.fold_left (^) "You own the following countries: " country_ids in
     state
 
 
-  
+
   (* remove player from game, re-distribute their countries to remaining player*)
   let quit_helper st =
     let player, pl = get_player st.c_turn st.players_list [] in
     (*free players properties, re-deploy to remaining players*)
-    let _ = st.players_list <- List.filter (fun x -> x != player) st.players_list 
+    let _ = st.players_list <- List.filter (fun x -> x != player) st.players_list
     in st
-  
+
   (*changes the game state based on the GUI input*)
   let do' act state =
     match act with
@@ -337,9 +346,9 @@ open Yojson.Basic.Util
       reinforce num (get_country ctr1 state) (get_country ctr2 state) state
     (* | Ally(str) -> ally str state *)
     | Quit -> quit_helper state
-    | Claim(ctr) -> claim (get_country ctr state) state 
+    | Claim(ctr) -> claim (get_country ctr state) state
     | Inv -> inv_helper state
-    | _ -> failwith "Action not implemented" 
+    | _ -> failwith "Action not implemented"
 
 
 
