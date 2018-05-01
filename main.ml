@@ -12,7 +12,9 @@ let rec updateTerm state =
   print_string  "> ";
   let cmd = parse(read_line()) in
   let updatedState = (do' cmd state) in
-  updateTerm updatedState
+  match cmd with
+  |Quit -> ()
+  |_->updateTerm updatedState
   (* if(quitting updatedState) then () else interactWithTerm updatedState *)
 
 (* [play_game f] plays the game in adventure file [f]. *)
