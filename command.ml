@@ -4,39 +4,44 @@
  * and each involves pressing a country and possibly putting a number of 
  * troops on that location.
 *)
-type actions = Deploy of (int * country) | 
-               Reinforce of (int * country * country) | Attack of (country*country) | End 
-               | Quit | Ally of string | Inv | Error of string
+type actions = Deploy of (int * string) | 
+               Reinforce of (int * string * string) | Attack of (string*string) 
+               | Quit | Ally of string | Inv | Error of string 
+               | Claim of string
 
 
 type command = actions
 
-(* [parse str] is the command that represents player input [str].
- * requires: [str] is one of the commands forms described in the
+(* [parse] takes in a command and creates the corresponding variant
+ * requires: [s] is one of the commands forms described in the
  * writeup:
- * attack [ctr1] [ctr2]          --> Attack country ctr 
+ * attack [ctr1] [ctr2]          --> Attack ctr2 using ctr1
  * deploy [num] [ctr]            --> Deploy num troops on country ctr
  * reinforce [num] [ctr1] [ctr2] --> Place troops from ctr1 on ctr2 
  * ally [plr]                    --> Ally request with player plr
- * inventory                     --> Highlights player's list of cards and alliances
+ * inv                           --> Highlights player's list of cards and alliances
  * quit                          --> Player quits from game 
+ * claim [ctr]                   --> Current player claims ctr
  *)
-let parse_helper str1 str2 str3 str4= 
-	match str1 with
-	| "attack" -> Attack(str2, str3)
-	| "deploy" -> Deploy(int_of_string(str2), str3)
-	| "reinforce" -> Reinforce(int_of_string(str2), str3, str4)
-	| "ally" -> Ally(str1)
-	| "quit"  -> Quit
-	| "inv" -> Inv
-	|  _ -> Error("Not a valid game action")
-
 let parse str = 
 	(*get GUI input here*)
-	failwith "Unimplemented"
-
-
-
+	let str_list = String.split_on_char (Char.chr 32) str in 
+	match str_list with
+	| a::b::c::d::e -> 
+		if String.lowercase_ascii(a) = "reinforce" then Reinforce(int_of_string(b), c, d)
+		else Error("Invalid game action")
+	| a::b::c::d -> 
+		if String.lowercase_ascii(a) = "attack" then Attack(b, c)
+		else if String.lowercase_ascii(a) = "deploy" then Deploy(int_of_string(b),c)
+		else Error("Invalid game action")
+	| a::b::c ->
+		if String.lowercase_ascii(a) = "claim" then Claim(b)
+		else Error("Invalid game action")
+	| a::b -> 
+		if String.lowercase_ascii(a) = "inv" then Inv
+		else if  String.lowercase_ascii(a) = "quit" then Quit
+		else Error("Invalid game action")
+	| _ -> Error("No action given")
 
 
 
