@@ -1,4 +1,5 @@
 open Yojson.Basic.Util
+open Command
 
 type country = {
   country_id: string ;
@@ -38,6 +39,10 @@ type state = {
   w_msg: string;
 }
 
+let get_msg st =
+  st.repl_msg
+
+
 let init_characters () =
   [Bran; NightKing; DaenerysTargareyan; JonSnow]
 
@@ -69,7 +74,7 @@ let rec get_player p pl npl =
   | [] -> failwith "Invalid Player"
   | h::t -> if h.id = p then h, t@npl else get_player p t (h::npl)
 
-let get_country str_country state = 
+let get_country str_country state =
   List.find (fun x -> x = str_country) state.countries
 
 let rec get_defender c pl npl =
@@ -100,7 +105,7 @@ let inc_troop c st =
     | [] -> failwith "Invalid Country"
     | (k,v)::t -> if k = c then (k,v+1)::t else inc c t
   in let _ = player.countries_held <- (inc c player.countries_held) in
-  let _ = st.repl_message <- c2.id ^ " has gained " ^ "one troop!" in 
+  let _ = st.repl_message <- c2.id ^ " has gained " ^ "one troop!" in
   let _ = st.players_list <- (player::pl) in st
 
 let dec_troop c st =
@@ -110,7 +115,7 @@ let dec_troop c st =
     | [] -> failwith "Invalid Country"
     | (k,v)::t -> if k = c then (k,v-1)::t else inc c t
   in let _ = player.countries_held <- (inc c player.countries_held) in
-  let _ = st.repl_message <- c.id ^ " has lost" ^ " one troop!" in 
+  let _ = st.repl_message <- c.id ^ " has lost" ^ " one troop!" in
   let _ = st.players_list <- (player::pl) in st
 
 let draw_card st =
@@ -131,7 +136,7 @@ let conquer a d pl c t st =
   let f (k,v) = k <> c in
   let _ = a.countries_held <- ((c,t)::a.countries_held) in
   let _ = d.countries_held <- List.filter f d.countries_held in
-  let _ = st.repl_message <- a.id ^ " has conquered " ^ c.country_id "!" in 
+  let _ = st.repl_message <- a.id ^ " has conquered " ^ c.country_id "!" in
   let _ = st.players_list <- (a::d::pl) in st
 
 let attack c c2 st =
@@ -164,84 +169,84 @@ let attack c c2 st =
     if x > max_x
     then dec_troop c2 st (* Decrement Defense Troop *)
     else dec_troop c st (* Decerement Attack Troop *)
-  | [|x; x'|], [|x2; x2'|] ->
-  | [|x; x'; x''|], [|x2; x2'|] ->
+  (* | [|x; x'|], [|x2; x2'|] ->
+  | [|x; x'; x''|], [|x2; x2'|] -> *)
   | _, _ -> failwith "Program Failure"
 
-let deploy str_country state = 
-  let current_plyr = fst (get_player state.c_turn state.players_list []) in 
-  let ctry = get_country str_country state in 
- 
+(* let deploy str_country state =
+  let current_plyr = fst (get_player state.c_turn state.players_list []) in
+  let ctry = get_country str_country state in
+
   let _ = state.repl_msg <- state.c_turn ^ " deploys 1 troop on " ^ str_country in
-  (* check to see if current player already has country 
+  (* check to see if current player already has country
    * if not, add that country to countries held
    *)
-   if List.mem_assoc ctry current_plyr.countries_held 
+   if List.mem_assoc ctry current_plyr.countries_held
    then inc_troop ctry state
-   else current_plyr.countries_held <- (ctry, 1)::(current_plyr.countries_held)
+   else current_plyr.countries_held <- (ctry, 1)::(current_plyr.countries_held) *)
 
-let reinforce num country_dec country_inc state = 
+(* let reinforce num country_dec country_inc state =
 
-  let current_plyr = fst (get_player state.c_turn state.players_list []) in 
+  let current_plyr = fst (get_player state.c_turn state.players_list []) in
 
   (* checks to see if a link exists between two countries *)
-  let rec check_links visited frontier = 
-    if frontier = [] then false 
+  let rec check_links visited frontier =
+    if frontier = [] then false
     else
-      let popped, frontier, new_visited = 
+      let popped, frontier, new_visited =
         (* pops country off of frontier*)
-        match frontier with 
+        match frontier with
         | (ctr, num)::b -> ctr, b, ctr.country_id::visited
-        (* methord would return false in match below 
+        (* methord would return false in match below
           before calling check_links with empty frontier *)
         | _ -> failwith "Program failure" in
 
-      (* adding neighboring countries to frontier that are not already in frontier, 
+      (* adding neighboring countries to frontier that are not already in frontier,
        * that are held by current player, and that have not been visited yet*)
-      let new_frontier = (List.filter (fun x -> 
-        (List.mem_assoc x current_plyr.countries_held) && 
-        not (List.mem (fst x).country_id visited) 
-        || (List.mem (fst x) frontier)) popped.neighbors)@frontier in 
-      if popped.country_id = country_inc.country_id then true 
+      let new_frontier = (List.filter (fun x ->
+        (List.mem_assoc x current_plyr.countries_held) &&
+        not (List.mem (fst x).country_id visited)
+        || (List.mem (fst x) frontier)) popped.neighbors)@frontier in
+      if popped.country_id = country_inc.country_id then true
       else check_links new_visited new_frontier in
 
   (* if there's a link, reinforce, otherwise return error message*)
-  if check_links [] [country_dec] then 
-    let str_troops = if num = 1 then "troop" else "troops" in 
-    let _ = state.repl_msg <- state.c_turn ^ " moved " 
-      ^ string_of_int(num) ^ " " ^ str_troops ^ " from " ^ str_country_dec 
+  if check_links [] [country_dec] then
+    let str_troops = if num = 1 then "troop" else "troops" in
+    let _ = state.repl_msg <- state.c_turn ^ " moved "
+      ^ string_of_int(num) ^ " " ^ str_troops ^ " from " ^ str_country_dec
       ^ " to " ^ str_country_inc in
-    let _ = for x = num downto 0 do inc_troop ctry_inc state done in 
-    let _ = for x = num downto 0 do dec_troop ctry_dec state done 
-  else 
-    let _ = state.repl_msg <- "Cannot reinforce using these two countries. Try again!"
+    let _ = for x = num downto 0 do inc_troop ctry_inc state done in
+    let _ = for x = num downto 0 do dec_troop ctry_dec state done
+  else
+    let _ = state.repl_msg <- "Cannot reinforce using these two countries. Try again!" *)
 
 (* return list of owned countries to player (most likely not needed for GUI) *)
 let inv_helper state =
-  let current_plyr = fst (get_player state.c_turn state.players_list []) in 
+  let current_plyr = fst (get_player state.c_turn state.players_list []) in
   let country_ids = List.map (fun x -> (fst x).country_id) current_plyr.countries_held in
   let _ = state.repl_msg <- List.fold_left (^) "You own the following countries: " country_ids
 
-
+(*
 (* remove player from game, re-distribute their countries to remaining player*)
-let quit_helper state = 
-  let current_plyr = fst (get_player state.c_turn state.players_list []) in 
+let quit_helper state =
+  let current_plyr = fst (get_player state.c_turn state.players_list []) in
 
   (*free players properties, re-deploy to remaining players*)
-  
+
   let _ = state.players_list <- List.remove current_plyr state.players_list
 
 (*changes the game state based on the GUI input*)
-let do' act state = 
+let do' act state =
   match act with
   | Attack(ctr1, ctr2) -> attack get_country(ctr1 state) get_country(ctr2 state) state
   | Deploy(num, ctr) -> deploy get_country(ctr state) state
-  | Reinforce(num, ctr1, ctr2) -> 
+  | Reinforce(num, ctr1, ctr2) ->
     reinforce num get_country(ctr1 state) get_country(ctr2 state) state
   (* | Ally(str) -> ally str state *)
-  | Quit -> quit_helper state 
-  | Inv -> inv_helper state  
-  | _ -> failwith "Action not implemented"
+  | Quit -> quit_helper state
+  | Inv -> inv_helper state
+  | _ -> failwith "Action not implemented" *)
 
 
 (* [taken s p] returns a list representing the countries in s
@@ -289,10 +294,3 @@ let do' act state =
 (* [cards_free s] returns a list of cards not held by any player
  *)
 (* val cards_free: state -> string list *)
-
-
-
-
-
-
-
