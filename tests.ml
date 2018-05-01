@@ -4,8 +4,9 @@ open Command
 
 let file = Yojson.Basic.from_file "dummy.json"
 
-let available1 = ["Japan"; "China"; "India"]
-let state1 = file |> init_state
+let state1 = init_state 3 file
+let player1 = get_player_of_state state1
+let string1 = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!"
 
 let rec remove lst elem =
   match lst with
@@ -23,12 +24,12 @@ let disregard_order lst1 lst2 =
   else false
 
 let tests = [
-  "test1" >:: (fun _ -> assert_equal true
-                        (disregard_order available1
-                           (state1 |> current_items))) ;
-  "test1" >:: (fun _ -> assert_equal true
-                                                 (disregard_order available1
-                                                    (state1 |> current_items))) ;
+  "takenby1" >:: (fun _ -> assert_equal [] (taken_by state1 player1));
+  "available1" >:: (fun _ -> assert_equal ["Japan", "China", "India"] (available state1));
+  "win1" >:: (fun _ -> assert_equal false (win state1));
+  "cards_owned_1" >:: (fun _ -> assert_equal [] (cards_owned player1));
+  "getcplayer1" >:: (fun _ -> assert_equal "1" (get_cplayer state1));
+  "get_msg" >:: (fun _ -> assert_equal string1 (get_msg state1));
 ]
 
 let suite =
