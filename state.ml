@@ -398,6 +398,14 @@ let get_player_of_state s =
       else helper t
   in helper s.players_list
 
+let get_player_by_id s id =
+  let rec helper plyrs =
+    match plyrs with
+    | [] -> failwith ("Player id not in list of players!")
+    | h::t -> if h.id = id then h
+      else helper t
+  in helper s.players_list
+
 (* [taken s p] returns a list representing the countries in s
 * that are held by a player p
 *)
