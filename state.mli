@@ -60,7 +60,9 @@ val cards_free: state -> card array
 
 val get_cplayer: state -> string
 
-val get_player_of_state: state -> player 
+val get_player_of_state: state -> player
+
+val get_player_by_id: state -> string -> player
 
 val print_state: state -> string
 
