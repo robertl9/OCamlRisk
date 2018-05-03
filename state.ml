@@ -18,11 +18,14 @@ type character = JonSnow | DaenerysTargareyan | NightKing | Bran
 
 type card = BannerMan | Lord | Dragon | WildCard
 
-type phase = Start | Reinforce | Deploy | Attack
+type t_phase = Deploy | Attack | Reinforce
+
+type phase = SetUp | Game of t_phase
 
 type player = {
   id: string;
   character: character;
+  mutable deploy: int;
   continents: continent list;
   mutable countries_held: (string * int) list;
   mutable cards: card list;
@@ -56,8 +59,7 @@ let head_of_lst lst =
   | [] -> []
   | h::t -> h
 
-let init_characters () =
-  [Bran; NightKing; DaenerysTargareyan; JonSnow]
+let init_characters () = [Bran; NightKing; DaenerysTargareyan; JonSnow]
 
 
 let init_cards () =
@@ -86,8 +88,8 @@ let to_countries a =
 
 let rec players n l =
   if n == 0 then l
-  else let player = {id = string_of_int n; character = JonSnow; continents = [];
-                     countries_held = []; cards = [];} in
+  else let player = {id = string_of_int n; character = JonSnow; deploy = 0;
+                     continents = []; countries_held = []; cards = [];} in
     let npl = player::l in
     players (n-1) npl
 
@@ -102,13 +104,12 @@ let init_state n j =
   let repl_msg = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!" in
   let fog_of_war = j |> member "fog_of_war" |> to_string in
   let win = j|> member "win_message" |> to_string in
-  {players_list = players n []; c_turn = "1"; turns = order n; turn = 0; c_phase = Start;
+  {players_list = players n []; c_turn = "1"; turns = order n; turn = 0; c_phase = SetUp;
    continents = continents; countries = countries; unclaimed = u_countries;
    card_l = init_cards (); fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
-(* "Welcome to Risk!" *)
 
 let add_player id character st =
-  let player = {id = id; character = character; continents = [];
+  let player = {id = id; character = character; deploy = 0; continents = [];
                 countries_held = []; cards = [];} in
   let _ = st.players_list <- player::st.players_list in st
 
@@ -148,12 +149,6 @@ let rec get_defender c pl npl =
   | [] -> failwith "Invalid Country"
   | h::t -> let boolean = List.fold_left f false h.countries_held in
     if boolean then h, t@npl else get_defender c t (h::npl)
-
-(* let roll n =
-  let rl = [] in
-  let rec roll_n n l =
-  if (n = 0) then (l) else (roll_n (n-1) ((Random.int 5 + 1)::l))
-  in roll_n n rl *)
 
 let roll n =
   let rl = Array.make n 0 in
@@ -353,18 +348,41 @@ let print_state st =
   s := !s ^ "Countries availble:\n" ^ (string_of_list st.unclaimed "");!s
 
 (*changes the game state based on the GUI input*)
-let do' act state =
-  match act with
-  | AttackC (ctr1, ctr2) -> attack (String.uppercase_ascii ctr1) (String.uppercase_ascii ctr2) state
-  | DeployC (num, ctr) -> for i = 0 to num-1 do inc_troop (String.uppercase_ascii ctr) state done;
-    let _ = state.repl_msg <- (String.uppercase_ascii ctr) ^ " has gained " ^ string_of_int num ^ " troop!" in state
+let do' cmd st =
+  match st.c_phase with
+  | SetUp -> (match cmd with
+      | ClaimC (c) when st.unclaimed != [] -> let st2 = pick_country (String.uppercase_ascii c) st in
+        let _ = if st2.turn = (Array.length st2.turns)*18 then st2.c_phase <- Game (Deploy) else st2.c_phase <- st2.c_phase in st2
+      | DeployC (n,c) when n == 1 -> for i = 0 to n-1 do inc_troop (String.uppercase_ascii c) st done;
+        let _ = st.turn <- st.turn + 1 in
+        let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
+        let _ = if st.turn = (Array.length st.turns)*18 then st.c_phase <- Game (Deploy) else st.c_phase <- st.c_phase in
+        let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in st
+      | QuitC -> quit_helper st
+      | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
+  | Game x -> (match x with
+      | Deploy -> (match cmd with
+          | DeployC (n,c) ->
+            let _  = 
+            for i = 0 to n-1 do inc_troop (String.uppercase_ascii c) st done;
+            let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in st
+          | QuitC -> quit_helper st
+          | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
+      | Attack -> (match cmd with
+          | AttackC (c1, c2) -> attack (String.uppercase_ascii c1) (String.uppercase_ascii c2) st
+          | QuitC -> quit_helper st
+          | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
+      | Reinforce -> (match cmd with
+          | ReinforceC (n, c1, c2) ->
+            let _ = st.turn <- st.turn + 1 in
+            let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
+            let _  = st.c_phase <- Game (Deploy) in st
+          | QuitC -> quit_helper st
+          | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st))
   (* | Reinforce (num, ctr1, ctr2) ->
      reinforce num (get_country ctr1 state) (get_country ctr2 state) state *)
   (* | Ally(str) -> ally str state *)
-  | QuitC -> quit_helper state
-  | ClaimC (ctr) -> pick_country (String.uppercase_ascii ctr) state
   (* | InvC -> inv_helper state *)
-  | _ -> let _ = state.repl_msg <- "Command Currently Unavailable" in state
 
 let taken_by state plyr =
   List.map (fun (a,_) -> a) plyr.countries_held
