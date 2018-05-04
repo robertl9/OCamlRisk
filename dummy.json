@@ -1,12 +1,20 @@
 {
-	"continents": [{
-		"id": "Asia",
+	"continents": [
+		{"id": "Asia",
 		"countries": ["Japan", "China", "India"],
-		"bonus": "5"}
+		"bonus": "5"},
+
+		{"id": "Europe",
+		"countries": ["England", "Ireland", "Italy"],
+		"bonus": "3"},
+
+		{"id": "America",
+		"countries": ["Canada", "UnitedStates", "Mexico"],
+		"bonus": "4"}
 	],
-	"countries": [{
-		"id": "Japan",
-		"neighbors": ["China"],
+	"countries": [
+		{"id": "Japan",
+		"neighbors": ["China", "UnitedStates"],
 		"continent": "Asia"},
 
 		{"id": "China",
@@ -14,8 +22,32 @@
 		"continent": "Asia"},
 
 		{"id": "India",
-		"neighbors": ["China"],
-		"continent": "Asia"}
+		"neighbors": ["China", "Italy"],
+		"continent": "Asia"},
+
+		{"id": "England",
+		"neighbors": ["Ireland", "UnitedStates"],
+		"continent": "Europe"},
+
+		{"id": "Ireland",
+		"neighbors": ["England, Italy"],
+		"continent": "Europe"},
+
+		{"id": "Italy",
+		"neighbors": ["Ireland", "India"],
+		"continent": "Europe"},
+
+		{"id": "Canada",
+		"neighbors": ["UnitedStates"],
+		"continent": "America"},
+
+		{"id": "UnitedStates",
+		"neighbors": ["England, Japan", "Canada", "Mexico"],
+		"continent": "America"},
+
+		{"id": "Mexico",
+		"neighbors": ["UnitedStates"],
+		"continent": "America"}
 		],
 	"fog_of_war": "false",
 	"win_message": "Congratulations! You have conquered the world!"

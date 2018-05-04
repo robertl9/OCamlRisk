@@ -26,7 +26,7 @@ type player = {
   id: string;
   character: character;
   mutable deploy: int;
-  continents: continent list;
+  mutable continents: continent list;
   mutable countries_held: (string * int) list;
   mutable cards: card list;
 }
@@ -76,8 +76,9 @@ let init_cards () =
 let to_continents a =
   let id = a |> member "id" |> to_string in
   let bonus = a |> member "bonus" |> to_string |> int_of_string in
-  let c_list = [] in (*no JSON element for country list*)
-  {continent_id = id; bonus_troops = bonus; country_list = c_list}
+  let c_list = a |> member "countries" |> to_list in
+  let c_list' = List.map (fun x -> String.uppercase_ascii (to_string x)) c_list in
+  {continent_id = id; bonus_troops = bonus; country_list = c_list'}
 
 (* take json element a and create country record*)
 let to_countries a =
@@ -126,13 +127,25 @@ let rec remove_l c l =
   | [] -> l
   | h::t -> if (h = c) then t else h::(remove_l c t)
 
-(* let rec continent countryl contnentl = *)
+let rec conq_continent countryl continentl cl =
+  match continentl with
+  | [] -> cl
+  | h::t ->
+    let rec contains_all l =
+      match l with
+      | [] -> conq_continent countryl t (h::cl)
+      | h'::t' -> let _ = print_string h' in
+        if List.mem h' countryl
+        then contains_all t'
+        else conq_continent countryl t cl in
+    contains_all h.country_list
 
 let pick_country c st =
   if (List.mem c st.unclaimed) then
     let player, pl = get_player st.c_turn st.players_list [] in
     let _ = player.countries_held <- (c, 1)::player.countries_held in
-    (* let _ = add continent if feasible *)
+    let pc = List.map (fun (k,v) -> k) player.countries_held in
+    let _ = player.continents <- conq_continent pc st.continents [] in
     let _ = st.unclaimed <- (remove_l c st.unclaimed) in
     let _ = st.turn <- st.turn + 1 in
     let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
@@ -162,24 +175,24 @@ let get_troops c p =
 let sum_troops p =
   List.fold_left (+) 0 (List.map (fun x -> snd x) p.countries_held)
 
-let inc_troop c st =
+let inc_troop n c st =
   let player, pl = get_player st.c_turn st.players_list [] in
   let rec inc c cl =
     match cl with
     | [] -> failwith "Invalid Country"
-    | (k,v)::t -> if k = c then (k,v+1)::t else inc c t
+    | (k,v)::t -> if k = c then (k,v+n)::t else inc c t
   in let _ = player.countries_held <- (inc c player.countries_held) in
-  let _ = st.repl_msg <- c ^ " has gained " ^ "one troop!" in
+  let _ = st.repl_msg <- c ^ " has gained " ^ (string_of_int n) ^ " troop!" in
   let _ = st.players_list <- (player::pl) in st
 
-let dec_troop c st =
+let dec_troop n c st =
   let player, pl = get_player st.c_turn st.players_list [] in
-  let rec inc c cl =
+  let rec dec c cl =
     match cl with
     | [] -> failwith "Invalid Country"
-    | (k,v)::t -> if k = c then (k,v-1)::t else inc c t
-  in let _ = player.countries_held <- (inc c player.countries_held) in
-  let _ = st.repl_msg <- c ^ " has lost" ^ " one troop!" in
+    | (k,v)::t -> if k = c then (k,v-n)::t else dec c t
+  in let _ = player.countries_held <- (dec c player.countries_held) in
+  let _ = st.repl_msg <- c ^ " has lost" ^ (string_of_int n) ^ " troop!" in
   let _ = st.players_list <- (player::pl) in st
 
 let draw_card st =
@@ -196,10 +209,18 @@ let rec max_e l =
   | h::[] -> h
   | h::t -> max h (max_e t)
 
+let rec max2_e l =
+  let _ = Array.fast_sort compare l in
+  l.(Array.length l - 2)
+
 let conquer a d pl c t st =
   let f (k,v) = k <> c in
   let _ = a.countries_held <- ((c,t)::a.countries_held) in
   let _ = d.countries_held <- List.filter f d.countries_held in
+  let pc = List.map (fun (k,v) -> k) a.countries_held in
+  let _ = a.continents <- conq_continent pc st.continents [] in
+  let pc2 = List.map (fun (k,v) -> k) d.countries_held in
+  let _ = d.continents <- conq_continent pc2 st.continents [] in
   let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "!" in
   let _ = st.players_list <- (a::d::pl) in st
 
@@ -215,112 +236,94 @@ let attack c c2 st =
   | [|x|], [|x2|] -> if x > x2
     then if d_troops = 1
       then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
-      else dec_troop c2 st (* Decrement Defense Troop *)
-    else dec_troop c st (* Decerement Attack Troop *)
+      else dec_troop 1 c2 st (* Decrement Defense Troop *)
+    else dec_troop 1 c st (* Decerement Attack Troop *)
   | [|x; x'|], [|x2|] -> let max_x = max_e [x;x'] in
     if max_x > x2
     then if d_troops = 1
       then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
-      else dec_troop c2 st (* Decrement Defense Troop *)
-    else dec_troop c st (* Decerement Attack Troop *)
+      else dec_troop 1 c2 st (* Decrement Defense Troop *)
+    else dec_troop 1 c st (* Decerement Attack Troop *)
   | [|x; x'; x''|], [|x2|] -> let max_x = max_e [x;x';x''] in
     if max_x > x2
     then if d_troops = 1
       then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
-      else dec_troop c2 st (* Decrement Defense Troop *)
-    else dec_troop c st (* Decerement Attack Troop *)
+      else dec_troop 1 c2 st (* Decrement Defense Troop *)
+    else dec_troop 1 c st (* Decerement Attack Troop *)
   | [|x|], [|x2; x2'|] -> let max_x = max_e [x2;x2'] in
     if x > max_x
-    then dec_troop c2 st (* Decrement Defense Troop *)
-    else dec_troop c st (* Decerement Attack Troop *)
-  (* | [|x; x'|], [|x2; x2'|] ->
-  | [|x; x'; x''|], [|x2; x2'|] -> *)
+    then dec_troop 1 c2 st (* Decrement Defense Troop *)
+    else dec_troop 1 c st (* Decerement Attack Troop *)
+  | [|x; x'|], [|x2; x2'|] ->
+    let max_x = max_e [x;x'] in
+    let max_x2 = max_e [x2;x2'] in
+    let max2_x = max2_e [|x;x'|] in
+    let max2_x2 = max2_e [|x2;x2'|] in
+    if max_x > max_x2 && max2_x > max2_x2
+    then if d_troops = 2
+      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      else dec_troop 2 c2 st (* Decrement Defense Troop *)
+    else if max_x > max_x2 || max2_x > max2_x2
+         then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
+         else dec_troop 2 c st (* Decerement Attack Troop *)
+  | [|x; x'; x''|], [|x2; x2'|] ->
+    let max_x = max_e [x;x'] in
+    let max_x2 = max_e [x2;x2'] in
+    let max2_x = max2_e [|x;x'|] in
+    let max2_x2 = max2_e [|x2;x2'|] in
+    if max_x > max_x2 && max2_x > max2_x2
+    then if d_troops = 2
+      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      else dec_troop 2 c2 st (* Decrement Defense Troop *)
+    else if max_x > max_x2 || max2_x > max2_x2
+    then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
+    else dec_troop 2 c st (* Decerement Attack Troop *)
   | _, _ -> let _ = print_int (Array.length a_roll) in
     let _ = print_int (Array.length d_roll) in
     failwith "Program Failure"
 
-(* let deploy ctry st =
-  let player, pl = get_player st.c_turn st.players_list [] in
-  let _ = st.repl_msg <- st.c_turn ^ " deploys 1 troop on " ^ ctry.country_id in
-    (* check to see if current player already has country
-     * if not, add that country to countries held *)
-  if List.mem_assoc ctry player.countries_held
-  then let st = inc_troop ctry st in
-    let _ = st.c_phase <- Attack in st
-  else let _ = player.countries_held <- (ctry, 1)::(player.countries_held) in
-    let _ = st.repl_msg <- player.id ^ " has claimed " ^ ctry.country_id in
-    let _ = st.players_list <- (player::pl) in
-    let _ = st.c_phase <- Attack in st *)
+let rec to_country s cl =
+  match cl with
+  | [] -> failwith "Invalid Country!"
+  | h::t -> if h.country_id = s then h else to_country s t
 
-(* let claim c st =
-  let player, pl = get_player st.c_turn st.players_list [] in
-  if List.mem_assoc c player.countries_held then
-    let st = inc_troop c st in
-    (*check num troop remaining, for now max initial troops is 30*)
-    let troops_on_board = List.fold_left (+) 0 (List.map sum_troops st.players_list) in
-    if troops_on_board = init_troops then
-      let _ = st.c_phase <- Deploy in st
-      (*let _ = st.c_turn <- "next person's player id" in *)
-    else st
-  else
-    let st = deploy c st in
-    let troops_on_board = List.fold_left (+) 0 (List.map sum_troops st.players_list) in
-    if troops_on_board = init_troops then
-      let _ = st.c_phase <- Deploy in
-      let _ = st.unclaimed <- List.filter (fun x -> x != c) st.unclaimed in st
-      (*let _ = st.c_turn <- "next person's player id" in *)
-    else st *)
-
-(* let reinforce num country_dec country_inc st =
-  let player, pl = get_player st.c_turn st.players_list [] in
-  let keep_in x =
-    (List.mem x (List.map (fun x -> (fst x).country_id) player.countries_held))
-  in
-  let rec update_troops str ctry num st =
-    if num = 0 then st
-    else
-     if str = "dec" then
-      let new_st = dec_troop ctry st in
-      update_troops str ctry (num - 1) new_st
-     else
-      let new_st = inc_troop ctry st in
-      update_troops str ctry (num - 1) new_st in
-    (* checks to see if a link exists between two countries *)
-    let rec check_links visited frontier =
-      if frontier = [] then false
+let rec reinforcable current_c dest neighbors cl visited st =
+  match neighbors with
+  | [] -> false
+  | h::t ->
+    if List.mem h visited = false && List.mem h cl
+    then
+      if h.country_id = dest
+      then true
       else
-        let popped, frontier, new_visited =
-          (* pops country off of frontier*)
-          match frontier with
-          | ctry_id::b -> (get_country ctry_id st), b, ctry_id::visited
-          (* method would return false in match above
-            before calling check_links with empty frontier *)
-          | _ -> failwith "Program failure" in
+        let to_c = fun x -> to_country x st.countries in
+        let new_n = List.map to_c h.neighbors in
+        reinforcable h.country_id dest new_n cl (h::visited) st || reinforcable current_c dest t cl (h::visited) st
+    else reinforcable current_c dest t cl visited st
 
-        (* adding neighboring countries to frontier that are not already in frontier,
-         * that are held by current player, and that have not been visited yet*)
-        let new_frontier =
-          (List.filter (fun x -> (keep_in x)) popped.neighbors)@frontier in
-        if popped.country_id = country_inc.country_id then true
-        else check_links new_visited new_frontier in *)
-
-  (* if there's a link, reinforce, otherwise return error message*)
-  (* if check_links [] [country_dec.country_id] then
-  let st = update_troops "inc" country_inc num (update_troops "dec" country_dec num st) in
-  let str_troops = if num = 1 then "troop" else "troops" in
-  let _ = st.repl_msg <- st.c_turn ^ " moved "
-                         ^ string_of_int(num) ^ " " ^ str_troops ^ " from " ^ country_dec.country_id
-                         ^ " to " ^ country_inc.country_id in
-  let _ = st.c_phase <- Deploy (*change c_turn*) in st
-  else
-    let _ = st.repl_msg <- "Cannot reinforce using these two countries. Try again!" in st *)
-
-(* return list of owned countries to player (most likely not needed for GUI) *)
-(* let inv_helper state =
-  let current_plyr, pl = get_player state.c_turn state.players_list [] in
-  let country_ids = List.map (fun x -> (fst x).country_id) current_plyr.countries_held in
-  let _ = state.repl_msg <- List.fold_left (^) "You own the following countries: " country_ids in
-  state *)
+let reinforce n c1 c2 st =
+  let player, pl = get_player st.c_turn st.players_list [] in
+  let cl = (List.map (fun (k,v) -> k) player.countries_held) in
+  let c1b = List.mem c1 cl in
+  let c2b = List.mem c2 cl in
+  let rec suff l =
+    match l with
+    | [] -> false
+    | (k,v)::t -> if k = c1 then n < v else suff t in
+  let suffb = suff player.countries_held in
+  if c1b && c2b then
+    if suffb then let _ = st.repl_msg <- "Insufficent troops!" in st
+    else
+      let to_c = fun x -> to_country x st.countries in
+      let countryl = List.map to_c cl in
+      let country1 = to_c c1 in
+      let neighbors = List.map to_c country1.neighbors in
+      let rb = reinforcable c1 c2 neighbors countryl [] st in
+      if rb then
+        let st' = dec_troop n c1 st in
+        let st'' = inc_troop n c2 st' in st''
+      else let _ = st.repl_msg <- "Countries must be connected!" in st
+  else let _ = st.repl_msg <- "Must own both countries to reinforce!" in st
 
 (* remove player from game, re-distribute their countries to remaining player*)
 let quit_helper st =
@@ -332,57 +335,93 @@ let quit_helper st =
 let rec string_of_dict d s =
   match d with
   | [] -> s
-  | (k,v)::t -> string_of_dict t ((string_of_int v)^" troops in "^k^"\n")
+  | (k,v)::t -> string_of_dict t (s ^ (string_of_int v) ^ " troops in "^k^"\n")
 
 let rec string_of_list l s =
   match l with
   | [] -> s
   | h::t -> string_of_list t (s^h^"\n")
 
+let rec string_of_continent l s =
+  match l with
+  | [] -> s
+  | h::t -> string_of_continent t (s^(h.continent_id)^"\n")
+
 let print_state st =
   let s = ref "Players are:" in
   for i = 0 to (Array.length st.turns)-1 do s := !s ^ " " ^ (st.turns.(i)) done;
   s := !s ^ ". It is currently " ^ st.c_turn ^ "\'s turn.\n";
   let p, _ = get_player st.c_turn st.players_list [] in
-  s := !s ^ "Player has:\n" ^ (string_of_dict (p.countries_held) "");
-  s := !s ^ "Countries availble:\n" ^ (string_of_list st.unclaimed "");!s
+  s := !s ^ "Player has:\n Countries:\n" ^ (string_of_dict (p.countries_held) "");
+  s := !s ^ "Continents:\n" ^ (string_of_continent (p.continents) "");
+  s := !s ^ "Countries availble:\n" ^ (string_of_list st.unclaimed "");
+  let s' = match st.c_phase with
+    | SetUp -> "SetUp!"
+    | Game x -> match x with
+      | Deploy -> "Deploy!"
+      | Attack -> "Attack!"
+      | Reinforce -> "Reinforce!" in
+  s := !s ^ "Current Phase is " ^ s'; !s
 
 (*changes the game state based on the GUI input*)
 let do' cmd st =
   match st.c_phase with
   | SetUp -> (match cmd with
       | ClaimC (c) when st.unclaimed != [] -> let st2 = pick_country (String.uppercase_ascii c) st in
-        let _ = if st2.turn = (Array.length st2.turns)*18 then st2.c_phase <- Game (Deploy) else st2.c_phase <- st2.c_phase in st2
-      | DeployC (n,c) when n == 1 -> for i = 0 to n-1 do inc_troop (String.uppercase_ascii c) st done;
-        let _ = st.turn <- st.turn + 1 in
-        let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
-        let _ = if st.turn = (Array.length st.turns)*18 then st.c_phase <- Game (Deploy) else st.c_phase <- st.c_phase in
-        let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in st
-      | QuitC -> quit_helper st
+        let _ = if st2.turn = (Array.length st2.turns)*4 then st2.c_phase <- Game (Deploy) else st2.c_phase <- st2.c_phase in st2
+      | DeployC (n,c) when n == 1 ->
+        let st' = inc_troop 1 (String.uppercase_ascii c) st in
+        let _ = st'.turn <- st'.turn + 1 in
+        let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in
+        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in
+        let _ = st'.repl_msg <- (String.uppercase_ascii c) ^ " has gained one troop!" in st'
       | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
   | Game x -> (match x with
       | Deploy -> (match cmd with
           | DeployC (n,c) ->
-            let _  = 
-            for i = 0 to n-1 do inc_troop (String.uppercase_ascii c) st done;
-            let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in st
-          | QuitC -> quit_helper st
+            (let player, pl = get_player st.c_turn st.players_list [] in
+            if player.deploy = 0 then
+              let troops = (if ((List.length player.countries_held)/3 <= 3)
+                            then 3
+                            else (List.length player.countries_held)/3) +
+                           List.fold_left (fun x y -> x + y.bonus_troops) 0 player.continents in
+              let _ = player.deploy <- troops in
+              let _ = st.players_list <- (player::pl) in
+              if n <= player.deploy then
+                let _ = player.deploy <- player.deploy-n in
+                let _ = if player.deploy = 0
+                  then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
+                  else st.c_phase <- Game (Deploy) in
+                let _ = st.players_list <- (player::pl) in
+                let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
+                let st' = inc_troop n (String.uppercase_ascii c) st in st'
+              else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st
+            else
+              if n <= player.deploy then
+                let _ = player.deploy <- player.deploy-n in
+                let _ = if player.deploy = 0
+                  then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
+                  else st.c_phase <- Game (Deploy) in
+                let _ = st.players_list <- (player::pl) in
+                let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
+                let st' = inc_troop n (String.uppercase_ascii c) st in st'
+              else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st)
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Attack -> (match cmd with
           | AttackC (c1, c2) -> attack (String.uppercase_ascii c1) (String.uppercase_ascii c2) st
-          | QuitC -> quit_helper st
+          | EndPhaseC -> let _  = st.c_phase <- Game (Reinforce) in st
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Reinforce -> (match cmd with
           | ReinforceC (n, c1, c2) ->
+            let st' = reinforce n (String.uppercase_ascii c1) (String.uppercase_ascii c2) st in
+            let _ = st'.turn <- st'.turn + 1 in
+            let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in
+            let _  = st'.c_phase <- Game (Deploy) in st'
+          | EndPhaseC ->
             let _ = st.turn <- st.turn + 1 in
             let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
-            let _  = st.c_phase <- Game (Deploy) in st
-          | QuitC -> quit_helper st
+            let _  = st.c_phase <- Game (Reinforce) in st
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st))
-  (* | Reinforce (num, ctr1, ctr2) ->
-     reinforce num (get_country ctr1 state) (get_country ctr2 state) state *)
-  (* | Ally(str) -> ally str state *)
-  (* | InvC -> inv_helper state *)
 
 let taken_by state plyr =
   List.map (fun (a,_) -> a) plyr.countries_held

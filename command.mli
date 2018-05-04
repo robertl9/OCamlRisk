@@ -4,10 +4,9 @@
  * and each involves pressing a country and possibly putting a number of
  * troops on that location.
 *)
-type actions = DeployC of int * string |
-               ReinforceC of int * string * string | AttackC of string * string
-               | QuitC | AllyC of string | InvC | ErrorC of string
-               | ClaimC of string
+type actions = | DeployC of int * string | ReinforceC of int * string * string
+               | AttackC of string * string | QuitC | AllyC of string
+               | ErrorC of string | ClaimC of string | EndPhaseC
 
 type command = actions
 

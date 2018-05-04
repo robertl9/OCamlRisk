@@ -4,10 +4,9 @@
  * and each involves pressing a country and possibly putting a number of
  * troops on that location.
 *)
-type actions = DeployC of int * string |
-               ReinforceC of int * string * string | AttackC of string * string
-               | QuitC | AllyC of string | InvC | ErrorC of string
-               | ClaimC of string
+type actions = | DeployC of int * string | ReinforceC of int * string * string
+               | AttackC of string * string | QuitC | AllyC of string
+               | ErrorC of string | ClaimC of string | EndPhaseC
 
 type command = actions
 
@@ -34,10 +33,11 @@ let parse str =
 		else if String.lowercase_ascii(a) = "deploy" then DeployC(int_of_string(b),c)
 		else ErrorC("Invalid game action")
 	| a::b::c ->
-		if String.lowercase_ascii(a) = "claim" then ClaimC(b)
-		else ErrorC("Invalid game action")
+   if String.lowercase_ascii(a) = "claim" then ClaimC(b)
+   else if String.lowercase_ascii(a) = "end" then EndPhaseC
+   else ErrorC("Invalid game action")
 	| a::b ->
-		if String.lowercase_ascii(a) = "inv" then InvC
-		else if  String.lowercase_ascii(a) = "quit" then QuitC
-		else ErrorC("Invalid game action")
+   if  String.lowercase_ascii(a) = "quit" then QuitC
+   else if String.lowercase_ascii(a) = "end" then EndPhaseC
+   else ErrorC("Invalid game action")
 	| _ -> ErrorC("No action given")
