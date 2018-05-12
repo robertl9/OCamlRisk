@@ -1,28 +1,18 @@
 open State
 open GMain
 open Gtk
-open Graphics
-open Png
-open Jpeg
-open Camlimages
-open Images
-open Gdk.Color
 
 
-(* open Player *)
-
-(* open Images *)
 
 let _ = GtkMain.Main.init ()
 
 let rec selectPlayers num_h num_ai vbox window=
 
   let _ = vbox#destroy () in
-
-  let main_hbox = GPack.hbox ~packing:window#add ~width:1400 ~height:700 () in
-  let game_board_box = GPack.vbox ~packing:main_hbox#add ~width:700 ~height:700 () in
-  let gameBoard = GPack.fixed ~packing:game_board_box#add () in
-  let _ = GMisc.image ~file: "images/trash2.png" ~packing:(gameBoard#put ~x:50 ~y:200) () in
+  let main_hbox = GPack.hbox ~packing:window#add ~width:1200 ~height:700 () in
+  (* let game_board_box = GPack.vbox ~packing:main_hbox#add ~width:700 ~height:700 () in *)
+  let gameBoard = GPack.fixed ~packing:main_hbox#add () in
+  let _ = GMisc.image ~file: "images/riskmap.png" ~packing:(gameBoard#put ~x:0 ~y:0) () in
   (* let winterfellButton2 = GButton.color_button ~color: [`NAME "green"] ~title:"A" ~packing:(gameBoard#put ~x:100 ~y:90) () in *)
   let winterfellButton = GButton.button ~label:"Winterfell" ~packing:(gameBoard#put ~x:110 ~y:220) () in
   let _ =winterfellButton#connect#clicked ~callback: (fun () -> selectPlayers 2 0 vbox window) in
@@ -109,9 +99,8 @@ let selectHumanPlayers num vbox window =
     let _ =p6#connect#clicked ~callback: (fun () -> selectPlayers 0 4 main_vbox window) in ()
   | _ -> failwith ("Cannot be possible!")
 
-let main () =
+let init_gui () =
   let window = GWindow.window ~title:"Risk" ~border_width:10 () in
-
   let _ = window #connect#destroy ~callback:GMain.Main.quit in
   let main_vbox = GPack.vbox ~packing:window#add () in
   let title = GMisc.label ~text:"Risk" ~packing:main_vbox#add ~height:50 () in
@@ -135,4 +124,4 @@ let main () =
   (* Enter the event loop *)
   GMain.Main.main ()
 
-let _ =  main ()
+let _ =  init_gui ()

@@ -1,7 +1,6 @@
 open Command
 open Yojson.Basic.Util
 
-type die_roll = One | Two | Three | Four | Five | Six | None 
 
 type country = {
   country_id: string ;
@@ -21,12 +20,9 @@ type card = BannerMan | Lord | Dragon | WildCard
 
 type t_phase = Deploy | Attack | Reinforce
 
-type difficulty = Beginner | Mid | Expert
-
-type t_player = Human | AI of difficulty
-
-
 type phase = SetUp | Game of t_phase
+
+type die_roll = One|Two|Three|Four|Five|Six|None
 
 type player = {
   id: string;
@@ -35,7 +31,6 @@ type player = {
   mutable continents: continent list;
   mutable countries_held: (string * int) list;
   mutable cards: card list;
-  mutable real: t_player;
 }
 
 type state = {
@@ -55,7 +50,7 @@ type state = {
 
 (* num of initial amount of troops allowed on board
  * subject to change
- *)
+*)
 let init_troops = 30
 
 let get_msg st =
@@ -97,28 +92,36 @@ let to_countries a =
 let rec players n l =
   if n == 0 then l
   else let player = {id = string_of_int n; character = JonSnow; deploy = 0;
-                     continents = []; countries_held = []; cards = []; real = Human} in
+                     continents = []; countries_held = []; cards = [];} in
     let npl = player::l in
     players (n-1) npl
 
-let order n =
-  let ol = Array.make n "" in
-  for i = 0 to n-1 do ol.(i)<-(string_of_int (i+1)) done; ol
+let rec ai p n l =
+  if n == 0 then l
+  else let player = {id = "a"^string_of_int (p+n); character = JonSnow; deploy = 0;
+                     continents = []; countries_held = []; cards = [];} in
+    let npl = player::l in
+    players (n-1) npl
 
-let init_state n j =
+let order n p ai =
+  let ol = Array.make n "" in
+  for i = 0 to p-1 do ol.(i)<-(string_of_int (i+1)) done;
+  for i = p to n-1 do ol.(i)<-("a"^string_of_int (i+1)) done; ol
+
+let init_state p ai_p j =
   let continents = j|> member "continents" |> to_list |> List.map to_continents in
   let countries = j|> member "countries" |> to_list |> List.map to_countries in
   let u_countries = let f x = (String.uppercase_ascii x.country_id) in List.map f countries in
   let repl_msg = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!" in
   let fog_of_war = j |> member "fog_of_war" |> to_string in
   let win = j|> member "win_message" |> to_string in
-  {players_list = players n []; c_turn = "1"; turns = order n; turn = 0; c_phase = SetUp;
+  {players_list = (players p []) @ (ai p ai_p []); c_turn = "1"; turns = order (p+ai_p) p ai_p; turn = 0; c_phase = SetUp;
    continents = continents; countries = countries; unclaimed = u_countries;
    card_l = init_cards (); fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
 
 let add_player id character st =
   let player = {id = id; character = character; deploy = 0; continents = [];
-                countries_held = []; cards = []; real = Human} in
+                countries_held = []; cards = [];} in
   let _ = st.players_list <- player::st.players_list in st
 
 let rec get_player p pl npl =
@@ -161,7 +164,7 @@ let pick_country c st =
   else let _ = st.repl_msg <- "Invalid Country/Country Taken" in st
 
 let get_country str_country state =
-    List.find (fun x -> x.country_id = str_country) state.countries
+  List.find (fun x -> x.country_id = str_country) state.countries
 
 let rec get_defender c pl npl =
   let f x (k,v) = if c = k then true else x || false in
@@ -271,8 +274,8 @@ let attack c c2 st =
       then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
       else dec_troop 2 c2 st (* Decrement Defense Troop *)
     else if max_x > max_x2 || max2_x > max2_x2
-         then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
-         else dec_troop 2 c st (* Decerement Attack Troop *)
+    then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
+    else dec_troop 2 c st (* Decerement Attack Troop *)
   | [|x; x'; x''|], [|x2; x2'|] ->
     let max_x = max_e [x;x'] in
     let max_x2 = max_e [x2;x2'] in
@@ -387,32 +390,32 @@ let do' cmd st =
       | Deploy -> (match cmd with
           | DeployC (n,c) ->
             (let player, pl = get_player st.c_turn st.players_list [] in
-            if player.deploy = 0 then
-              let troops = (if ((List.length player.countries_held)/3 <= 3)
-                            then 3
-                            else (List.length player.countries_held)/3) +
-                           List.fold_left (fun x y -> x + y.bonus_troops) 0 player.continents in
-              let _ = player.deploy <- troops in
-              let _ = st.players_list <- (player::pl) in
-              if n <= player.deploy then
-                let _ = player.deploy <- player.deploy-n in
-                let _ = if player.deploy = 0
-                  then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
-                  else st.c_phase <- Game (Deploy) in
-                let _ = st.players_list <- (player::pl) in
-                let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
-                let st' = inc_troop n (String.uppercase_ascii c) st in st'
-              else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st
-            else
-              if n <= player.deploy then
-                let _ = player.deploy <- player.deploy-n in
-                let _ = if player.deploy = 0
-                  then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
-                  else st.c_phase <- Game (Deploy) in
-                let _ = st.players_list <- (player::pl) in
-                let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
-                let st' = inc_troop n (String.uppercase_ascii c) st in st'
-              else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st)
+             if player.deploy = 0 then
+               let troops = (if ((List.length player.countries_held)/3 <= 3)
+                             then 3
+                             else (List.length player.countries_held)/3) +
+                            List.fold_left (fun x y -> x + y.bonus_troops) 0 player.continents in
+               let _ = player.deploy <- troops in
+               let _ = st.players_list <- (player::pl) in
+               if n <= player.deploy then
+                 let _ = player.deploy <- player.deploy-n in
+                 let _ = if player.deploy = 0
+                   then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
+                   else st.c_phase <- Game (Deploy) in
+                 let _ = st.players_list <- (player::pl) in
+                 let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
+                 let st' = inc_troop n (String.uppercase_ascii c) st in st'
+               else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st
+             else
+             if n <= player.deploy then
+               let _ = player.deploy <- player.deploy-n in
+               let _ = if player.deploy = 0
+                 then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
+                 else st.c_phase <- Game (Deploy) in
+               let _ = st.players_list <- (player::pl) in
+               let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
+               let st' = inc_troop n (String.uppercase_ascii c) st in st'
+             else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st)
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Attack -> (match cmd with
           | AttackC (c1, c2) -> attack (String.uppercase_ascii c1) (String.uppercase_ascii c2) st
@@ -471,57 +474,57 @@ let get_player_by_id s id =
   in helper s.players_list
 
 (* [taken s p] returns a list representing the countries in s
-* that are held by a player p
+ * that are held by a player p
 *)
 (* val taken_by: state -> player -> string list *)
 
 
-  (* [available s] is a list of countries
-   * that are not taken by a player, on teh board
-   *)
-  (* val available: state -> string list *)
+(* [available s] is a list of countries
+ * that are not taken by a player, on teh board
+*)
+(* val available: state -> string list *)
 
 
-  (* [continents] list of continent names*)
-  (* val continents: state -> string list *)
+(* [continents] list of continent names*)
+(* val continents: state -> string list *)
 
 
-  (* [countries] list of country names*)
-  (* val countries: state -> string list *)
+(* [countries] list of country names*)
+(* val countries: state -> string list *)
 
 
-  (* [exits c] returns a list of the names of countries that neighbor c *)
-  (* val exits: country -> string list *)
+(* [exits c] returns a list of the names of countries that neighbor c *)
+(* val exits: country -> string list *)
 
 
-  (* [num_troops s p] *)
-  (* val num_troops: state -> int *)
+(* [num_troops s p] *)
+(* val num_troops: state -> int *)
 
 
-  (* [turns_by p] is a number representing the number of turns taken by a player.
-   * A turn consists of three stages: p deploying their troops, p declaring an attack
-   * on a country held by another player, and p reinforcing their troops
-   *)
-  (* val turns_by: player -> int *)
+(* [turns_by p] is a number representing the number of turns taken by a player.
+ * A turn consists of three stages: p deploying their troops, p declaring an attack
+ * on a country held by another player, and p reinforcing their troops
+*)
+(* val turns_by: player -> int *)
 
 
-  (* [win s] returns a state in which the player who owns all of the
-   * countries in the state wins the game. If no such player exists, the
-   * same state is returned.
-   *)
-  (* val win: state -> state *)
+(* [win s] returns a state in which the player who owns all of the
+ * countries in the state wins the game. If no such player exists, the
+ * same state is returned.
+*)
+(* val win: state -> state *)
 
 
-  (* [cards_owned p] returns a list of strings representing cards owned by p*)
-  (* val cards_owned: player -> string list *)
+(* [cards_owned p] returns a list of strings representing cards owned by p*)
+(* val cards_owned: player -> string list *)
 
 
-  (* [remove_card s c] returns a state that has a
-   * a card list that does not contain c
-   *)
-  (* val remove_card: state -> card -> state *)
+(* [remove_card s c] returns a state that has a
+ * a card list that does not contain c
+*)
+(* val remove_card: state -> card -> state *)
 
 
-  (* [cards_free s] returns a list of cards not held by any player
-   *)
-  (* val cards_free: state -> string list *)
+(* [cards_free s] returns a list of cards not held by any player
+*)
+(* val cards_free: state -> string list *)
