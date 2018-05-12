@@ -20,6 +20,11 @@ type card = BannerMan | Lord | Dragon | WildCard
 
 type t_phase = Deploy | Attack | Reinforce
 
+type difficulty = Beginner | Mid | Expert
+
+type t_player = Human | AI of difficulty
+
+
 type phase = SetUp | Game of t_phase
 
 type player = {
@@ -29,6 +34,7 @@ type player = {
   mutable continents: continent list;
   mutable countries_held: (string * int) list;
   mutable cards: card list;
+  mutable real: t_player;
 }
 
 type state = {
@@ -90,7 +96,7 @@ let to_countries a =
 let rec players n l =
   if n == 0 then l
   else let player = {id = string_of_int n; character = JonSnow; deploy = 0;
-                     continents = []; countries_held = []; cards = [];} in
+                     continents = []; countries_held = []; cards = []; real = Human} in
     let npl = player::l in
     players (n-1) npl
 
@@ -111,7 +117,7 @@ let init_state n j =
 
 let add_player id character st =
   let player = {id = id; character = character; deploy = 0; continents = [];
-                countries_held = []; cards = [];} in
+                countries_held = []; cards = []; real = Human} in
   let _ = st.players_list <- player::st.players_list in st
 
 let rec get_player p pl npl =
