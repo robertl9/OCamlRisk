@@ -1,6 +1,7 @@
 open Command
 open Yojson.Basic.Util
 
+type die_roll = One | Two | Three | Four | Five | Six | None 
 
 type country = {
   country_id: string ;
