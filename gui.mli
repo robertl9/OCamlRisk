@@ -1,1 +1,2 @@
-val init_gui: unit -> unit
+val init_gui: unit -> string
+val draw: State.state -> unit
