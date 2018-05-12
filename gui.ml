@@ -1,7 +1,6 @@
-(* open State *)
+open State
 open GMain
 open Gtk
-(* open GdkKeysyms *)
 open Graphics
 open Png
 open Jpeg
@@ -16,64 +15,14 @@ open Gdk.Color
 
 let _ = GtkMain.Main.init ()
 
-(* let array_of_image img =
-  match img with
-  | Images.Index8 bitmap ->
-    let w = bitmap.Index8.width
-    and h = bitmap.Index8.height
-    and colormap = bitmap.Index8.colormap.map in
-    let cmap = Array.map (fun {r = r; g = g; b = b} -> Graphics.rgb r g b) colormap in
-    if bitmap.Index8.transparent <> -1 then
-      cmap.(bitmap.Index8.transparent) <- transp;
-    Array.init h (fun i ->
-        Array.init w (fun j -> cmap.(Index8.unsafe_get bitmap j i)))
-  | Index16 bitmap ->
-    let w = bitmap.Index16.width
-    and h = bitmap.Index16.height
-    and colormap = bitmap.Index16.colormap.map in
-    let cmap = Array.map (fun {r = r; g = g; b = b} -> rgb r g b) colormap in
-    if bitmap.Index16.transparent <> -1 then
-      cmap.(bitmap.Index16.transparent) <- transp;
-    Array.init h (fun i ->
-        Array.init w (fun j -> cmap.(Index16.unsafe_get bitmap j i)))
-  | Rgb24 bitmap ->
-    let w = bitmap.Rgb24.width
-    and h = bitmap.Rgb24.height in
-    Array.init h (fun i ->
-        Array.init w (fun j ->
-            let {r = r; g = g; b = b} = Rgb24.unsafe_get bitmap j i in
-            rgb r g b))
-  | Rgba32 _ | Cmyk32 _ -> failwith "RGBA and CMYK not supported" *)
-
-(* let load_image file =
-   print_endline "Load as string";
-   let buf = Bytes.create (256*256*3) in
-   let ic = open_in_bin file in
-   really_input ic buf 0 (256*256*3);
-   close_in ic;
-   buf *)
-
-(* let rgb_at buf x y =
-   let offset = (y * 256 + x) * 3 in
-   (int_of_char (Bytes.get buf offset),
-   int_of_char (Bytes.get buf (offset+1)),
-   int_of_char (Bytes.get buf (offset+2))) *)
-
 let rec selectPlayers num_h num_ai vbox window=
-
-  (* let g = Graphic_image.of_image img  *)
-
-  (* let g = Graphic_image.of_image img in *)
-  (* Graphics.draw_image img 0 0; *)
 
   let _ = vbox#destroy () in
 
-  (* let bg = GtkWidget.gtk_image_new_from_file(const gchar *filename); *)
-
-  let main_hbox = GPack.hbox ~packing:window#add ~width:1000 ~height:800 () in
-  let game_board_box = GPack.vbox ~packing:main_hbox#add ~width:700 ~height:800 () in
+  let main_hbox = GPack.hbox ~packing:window#add ~width:1400 ~height:700 () in
+  let game_board_box = GPack.vbox ~packing:main_hbox#add ~width:700 ~height:700 () in
   let gameBoard = GPack.fixed ~packing:game_board_box#add () in
-  let _ = GMisc.image ~file: "images/trash.png" ~packing:(gameBoard#put ~x:50 ~y:200) () in
+  let _ = GMisc.image ~file: "images/trash2.png" ~packing:(gameBoard#put ~x:50 ~y:200) () in
   (* let winterfellButton2 = GButton.color_button ~color: [`NAME "green"] ~title:"A" ~packing:(gameBoard#put ~x:100 ~y:90) () in *)
   let winterfellButton = GButton.button ~label:"Winterfell" ~packing:(gameBoard#put ~x:110 ~y:220) () in
   let _ =winterfellButton#connect#clicked ~callback: (fun () -> selectPlayers 2 0 vbox window) in
@@ -106,12 +55,14 @@ let rec selectPlayers num_h num_ai vbox window=
   let _ = countryI#connect#clicked ~callback: (fun () -> selectPlayers 2 0 vbox window) in
   let countryILabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 215 ~y:595) () in
 
-  let a_dice1 = GMisc.image ~file: "images/dice1.png" ~packing:(gameBoard#put ~x:350 ~y:200) () in
-  let a_dice2 = GMisc.image ~file: "images/dice5.png" ~packing:(gameBoard#put ~x:405 ~y:200) () in
-  let a_dice3 = GMisc.image ~file: "images/dice6.png" ~packing:(gameBoard#put ~x:460 ~y:200) () in
+  let a_dice1 = GMisc.image ~file: "images/dice1.png" ~packing:(gameBoard#put ~x:700 ~y:100) () in
+  let a_dice2 = GMisc.image ~file: "images/dice5.png" ~packing:(gameBoard#put ~x:755 ~y:100) () in
+  let a_dice3 = GMisc.image ~file: "images/dice6.png" ~packing:(gameBoard#put ~x:810 ~y:100) () in
+  let attackLabel = GMisc.label ~text:"Attacking Dice" ~packing:(gameBoard#put ~x:610 ~y:125) () in
 
-  let d_dice1 = GMisc.image ~file: "images/dice1.png" ~packing:(gameBoard#put ~x:377 ~y:300) () in
-  let d_dice2 = GMisc.image ~file: "images/dice3.png" ~packing:(gameBoard#put ~x:433 ~y:300) () in ()
+  let d_dice1 = GMisc.image ~file: "images/dice1.png" ~packing:(gameBoard#put ~x:727 ~y:200) () in
+  let d_dice2 = GMisc.image ~file: "images/dice3.png" ~packing:(gameBoard#put ~x:783 ~y:200) () in
+  let defendLabel = GMisc.label ~text: "Defending Dice" ~packing:(gameBoard#put ~x:610 ~y:225) () in ()
 
 
 
@@ -180,141 +131,8 @@ let main () =
   let p5 = GButton.button ~label:"5 Players" ~packing:hbox2#add () in
   let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 5 0 main_vbox window) in
 
-  (* let menubar = GMenu.menu_bar ~packing:main_vbox#pack () in
-     let factory = new GMenu.factory menubar in
-     let accel_group = factory#accel_group in
-     let file_menu = factory#add_submenu "File" in *)
-
-  (* File menu *)
-  (* let factory = new GMenu.factory file_menu ~accel_group in
-     factory#add_item "Quit" ~key:_Q ~callback: Main.quit;
-     window#add_accel_group accel_group; *)
   window#show ();
   (* Enter the event loop *)
   GMain.Main.main ()
 
 let _ =  main ()
-
-
-
-
-
-
-
-(* open Graphics
-
-let white = rgb 255 255 255
-let blue  = rgb 30 25 255
-
-(* no function for converting color back to rgb in Graphics *)
-let color_to_rgb color =
-    let r = (color land 0xFF0000) asr 0x10
-    and g = (color land 0x00FF00) asr 0x8
-    and b = (color land 0x0000FF)
-    in r, g, b
-
-let open_window =
-    open_graph " 640x480";
-    set_window_title "GraphicsExample"
-
-(* no way of setting background color; resizing shows white *)
-let clear_window color =
-    let fg = foreground
-    in
-        set_color color;
-        fill_rect 0 0 (size_x ()) (size_y ());
-        set_color fg
-
-(* create a gradient of colors from black at 0,0 to white at w-1,h-1 *)
-let gradient arr w h =
-    for y = 0 to h-1 do
-        for x = 0 to w-1 do
-            let s = 255 * (x+y) / (w+h-2)
-            in arr.(y).(x) <- rgb s s s
-        done
-    done
-
-let draw_gradient x y w h =
-    (* w and h are flipped from perspective of the matrix *)
-    let arr = Array.make_matrix h w white
-    in
-        gradient arr w h;
-        draw_image (make_image arr) 0 0
-
-let rec event_loop wx wy =
-    (* there's no resize event so polling in required *)
-    let _ = wait_next_event [Poll]
-    and wx' = size_x () and wy' = size_y ()
-    in
-        if wx' <> wx || wy' <> wy then
-            begin
-                clear_window blue;
-                draw_gradient 0 0 200 100
-            end;
-        Unix.sleep 1;
-        event_loop wx' wy'
-
-let () =
-    open_window;
-    let r,g,b = color_to_rgb background
-    in
-        Printf.printf "Background color: %d %d %d\n" r g b;
-        try event_loop 0 0
-        with Graphic_failure _ -> print_endline "Exiting..."
-
-
-
-(* open State *)
-(* open GMain
-open Graphics
-open Png
-open Jpeg
-open Camlimages
-open Images
-
-
-(* open Player *)
-
-(* open Images *)
-
-let array_of_image img =
-  match img with
-  | Images.Index8 bitmap ->
-      let w = bitmap.Index8.width
-      and h = bitmap.Index8.height
-      and colormap = bitmap.Index8.colormap.map in
-      let cmap = Array.map (fun {r = r; g = g; b = b} -> Graphics.rgb r g b) colormap in
-      if bitmap.Index8.transparent <> -1 then
-        cmap.(bitmap.Index8.transparent) <- transp;
-      Array.init h (fun i ->
-        Array.init w (fun j -> cmap.(Index8.unsafe_get bitmap j i)))
-  | Index16 bitmap ->
-      let w = bitmap.Index16.width
-      and h = bitmap.Index16.height
-      and colormap = bitmap.Index16.colormap.map in
-      let cmap = Array.map (fun {r = r; g = g; b = b} -> rgb r g b) colormap in
-      if bitmap.Index16.transparent <> -1 then
-        cmap.(bitmap.Index16.transparent) <- transp;
-      Array.init h (fun i ->
-        Array.init w (fun j -> cmap.(Index16.unsafe_get bitmap j i)))
-  | Rgb24 bitmap ->
-      let w = bitmap.Rgb24.width
-      and h = bitmap.Rgb24.height in
-      Array.init h (fun i ->
-        Array.init w (fun j ->
-          let {r = r; g = g; b = b} = Rgb24.unsafe_get bitmap j i in
-          rgb r g b))
-  | Rgba32 _ | Cmyk32 _ -> failwith "RGBA and CMYK not supported"
-
-let rec loop () = loop ()
-
-let main () =
-  let image = Png.load_as_rgb24 ("westeros.png") [] in
-  let converted = array_of_image image in
-  let fin_img = Graphics.make_image converted in
-  Graphics.draw_image fin_img 0 0;
-  loop () *)
-
-let _ =
-  Graphics.open_window
-  (* main (); *) *)
