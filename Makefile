@@ -5,7 +5,7 @@ state:
 	ocamlbuild -use-ocamlfind state.byte
 
 gui: command state
-	ocamlbuild -use-ocamlfind -cflags -I,+../lablgtk2 gui.byte && ./gui.byte
+	ocamlbuild -use-ocamlfind gui.byte && ./gui.byte
 
 clean:
 	ocamlbuild -clean
@@ -18,4 +18,3 @@ test:
 
 check:
 	bash checkenv.sh && bash checktypes.sh
-
