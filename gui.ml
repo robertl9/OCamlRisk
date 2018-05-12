@@ -29,78 +29,77 @@ let rec draw st =
   let finishButton = GButton.button ~label:"Finish" ~packing:right_buttons#add () in
   let _ = finishButton#connect#clicked ~callback: (fun () -> ()) in
 
-
   let winterButton = GButton.button ~label:"Winter" ~packing:(gameBoard#put ~x:120 ~y:30) () in
   let _ =winterButton#connect#clicked ~callback: (fun () -> ()) in
-  let winterLabel = GMisc.label ~text:"3" ~packing:(gameBoard#put ~x:120 ~y:55) () in
+  let winterLabel = GMisc.label ~text:"3" ~packing:(gameBoard#put ~x:138 ~y:55) () in
   let countryB = GButton.button ~label:"Winterfell" ~packing:(gameBoard#put ~x:140 ~y:120) () in
   let _ = countryB#connect#clicked ~callback: (fun () -> ()) in
-  let countryBLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:140 ~y:145) () in
-  let countryC = GButton.button ~label:"CountryC" ~packing:(gameBoard#put ~x:180 ~y:180) () in
+  let countryBLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:165 ~y:145) () in
+  let countryC = GButton.button ~label:"Riverrun" ~packing:(gameBoard#put ~x:180 ~y:180) () in
   let _ = countryC#connect#clicked ~callback: (fun () -> ()) in
-  let countryCLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:180 ~y:205) () in
-  let countryD = GButton.button ~label:"Riverrun" ~packing:(gameBoard#put ~x:178 ~y:240) () in
+  let countryCLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:200 ~y:205) () in
+  let countryD = GButton.button ~label:"Vale" ~packing:(gameBoard#put ~x:178 ~y:240) () in
   let _ = countryD#connect#clicked ~callback: (fun () -> ()) in
-  let countryDLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:183 ~y:265) () in
+  let countryDLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:192 ~y:265) () in
   let countryE = GButton.button ~label:"Casterly\nRock" ~packing:(gameBoard#put ~x:110 ~y:280) () in
   let _ = countryE#connect#clicked ~callback: (fun () -> ()) in
-  let countryELabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:110 ~y:320) () in
+  let countryELabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:129 ~y:320) () in
   let countryF = GButton.button ~label:"Dragon-\nstone" ~packing:(gameBoard#put ~x:203 ~y:325) () in
   let _ = countryF#connect#clicked ~callback: (fun () -> ()) in
-  let countryFLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:215 ~y:365) () in
+  let countryFLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:225 ~y:365) () in
   let countryG = GButton.button ~label:"Storm's End" ~packing:(gameBoard#put ~x:120 ~y:360) () in
   let _ = countryG#connect#clicked ~callback: (fun () -> ()) in
-  let countryGLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:125 ~y:385) () in
+  let countryGLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:150 ~y:385) () in
   let countryH = GButton.button ~label:"Dorne" ~packing:(gameBoard#put ~x:170 ~y:457) () in
   let _ = countryH#connect#clicked ~callback: (fun () -> ()) in
-  let countryHLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:170 ~y:482) () in
+  let countryHLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x:185 ~y:482) () in
   let countryJ = GButton.button ~label:"Pentos" ~packing:(gameBoard#put ~x:455 ~y:320) () in
   let _ = countryJ#connect#clicked ~callback: (fun () -> ()) in
-  let countryJLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 455 ~y:345) () in
+  let countryJLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 470 ~y:345) () in
 
   let countryK = GButton.button ~label:"Braavos" ~packing:(gameBoard#put ~x:425 ~y:220) () in
   let _ = countryK#connect#clicked ~callback: (fun () -> ()) in
-  let countryKLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 425 ~y:245) () in
+  let countryKLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 445 ~y:245) () in
 
   let countryL = GButton.button ~label:"Tyrosh" ~packing:(gameBoard#put ~x:440 ~y:410) () in
   let _ = countryL#connect#clicked ~callback: (fun () -> ()) in
-  let countryLLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 440 ~y:435) () in
+  let countryLLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 457 ~y:435) () in
 
   let countryM = GButton.button ~label:"Dothraki Sea" ~packing:(gameBoard#put ~x:645 ~y:265) () in
   let _ = countryM#connect#clicked ~callback: (fun () -> ()) in
-  let countryMLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 645 ~y:290) () in
+  let countryMLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 680 ~y:290) () in
 
   let countryN = GButton.button ~label:"Volantis" ~packing:(gameBoard#put ~x:545 ~y:425) () in
   let _ = countryN#connect#clicked ~callback: (fun () -> ()) in
-  let countryNLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 545 ~y:450) () in
+  let countryNLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 563 ~y:450) () in
 
   let countryO = GButton.button ~label:"Slaver Bay" ~packing:(gameBoard#put ~x:646 ~y:395) () in
   let _ = countryO#connect#clicked ~callback: (fun () -> ()) in
-  let countryOLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 648 ~y:420) () in
+  let countryOLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 661 ~y:420) () in
 
   let countryP = GButton.button ~label:"Unknown Lands" ~packing:(gameBoard#put ~x:800 ~y:200) () in
   let _ = countryP#connect#clicked ~callback: (fun () -> ()) in
-  let countryPLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 800 ~y:225) () in
+  let countryPLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 835 ~y:225) () in
 
   let countryQ = GButton.button ~label:"Red Waste" ~packing:(gameBoard#put ~x:760 ~y:420) () in
   let _ = countryQ#connect#clicked ~callback: (fun () -> ()) in
-  let countryQLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 760 ~y:445) () in
+  let countryQLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 790 ~y:445) () in
 
   let countryR = GButton.button ~label:"Skagos" ~packing:(gameBoard#put ~x:280 ~y:100) () in
   let _ = countryR#connect#clicked ~callback: (fun () -> ()) in
-  let countryRLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 280 ~y:125) () in
+  let countryRLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 300 ~y:125) () in
 
   let countryS = GButton.button ~label:"Iron Islands" ~packing:(gameBoard#put ~x:10 ~y:220) () in
   let _ = countryS#connect#clicked ~callback: (fun () -> ()) in
-  let countrySLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 10 ~y:245) () in
+  let countrySLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 45 ~y:245) () in
 
   let countryT = GButton.button ~label:"HighGarden" ~packing:(gameBoard#put ~x:10 ~y:440) () in
   let _ = countryT#connect#clicked ~callback: (fun () -> ()) in
-  let countryTLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 10 ~y:465) () in
+  let countryTLabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 37 ~y:470) () in
 
   let countryU = GButton.button ~label:"Qohor" ~packing:(gameBoard#put ~x:520 ~y:240) () in
   let _ = countryU#connect#clicked ~callback: (fun () -> ()) in
-  let countryULabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 520 ~y:265) () in
+  let countryULabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 538 ~y:265) () in
 
 
 
