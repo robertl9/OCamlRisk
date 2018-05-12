@@ -73,7 +73,7 @@ let rec selectPlayers num_h num_ai vbox window=
   let main_hbox = GPack.hbox ~packing:window#add ~width:1000 ~height:800 () in
   let game_board_box = GPack.vbox ~packing:main_hbox#add ~width:700 ~height:800 () in
   let gameBoard = GPack.fixed ~packing:game_board_box#add () in
-  let _ = GMisc.image ~file: "trash.png" ~packing:(gameBoard#put ~x:50 ~y:200) () in
+  let _ = GMisc.image ~file: "images/trash.png" ~packing:(gameBoard#put ~x:50 ~y:200) () in
   (* let winterfellButton2 = GButton.color_button ~color: [`NAME "green"] ~title:"A" ~packing:(gameBoard#put ~x:100 ~y:90) () in *)
   let winterfellButton = GButton.button ~label:"Winterfell" ~packing:(gameBoard#put ~x:110 ~y:220) () in
   let _ =winterfellButton#connect#clicked ~callback: (fun () -> selectPlayers 2 0 vbox window) in
@@ -106,12 +106,12 @@ let rec selectPlayers num_h num_ai vbox window=
   let _ = countryI#connect#clicked ~callback: (fun () -> selectPlayers 2 0 vbox window) in
   let countryILabel = GMisc.label ~text:"2" ~packing:(gameBoard#put ~x: 215 ~y:595) () in
 
-  let a_dice1 = GMisc.image ~file: "dice1.png" ~packing:(gameBoard#put ~x:350 ~y:200) () in
-  let a_dice2 = GMisc.image ~file: "dice5.png" ~packing:(gameBoard#put ~x:405 ~y:200) () in
-  let a_dice3 = GMisc.image ~file: "dice6.png" ~packing:(gameBoard#put ~x:460 ~y:200) () in
+  let a_dice1 = GMisc.image ~file: "images/dice1.png" ~packing:(gameBoard#put ~x:350 ~y:200) () in
+  let a_dice2 = GMisc.image ~file: "images/dice5.png" ~packing:(gameBoard#put ~x:405 ~y:200) () in
+  let a_dice3 = GMisc.image ~file: "images/dice6.png" ~packing:(gameBoard#put ~x:460 ~y:200) () in
 
-  let d_dice1 = GMisc.image ~file: "dice1.png" ~packing:(gameBoard#put ~x:377 ~y:300) () in
-  let d_dice2 = GMisc.image ~file: "dice3.png" ~packing:(gameBoard#put ~x:433 ~y:300) () in ()
+  let d_dice1 = GMisc.image ~file: "images/dice1.png" ~packing:(gameBoard#put ~x:377 ~y:300) () in
+  let d_dice2 = GMisc.image ~file: "images/dice3.png" ~packing:(gameBoard#put ~x:433 ~y:300) () in ()
 
 
 
