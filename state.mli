@@ -12,9 +12,9 @@ type player
 (* [card] is an abstract type representing a card in the game*)
 type card
 
-type phase
-
 type t_phase
+
+type phase = SetUp | Game of t_phase
 
 (* [taken s p] returns a list representing the countries in s
  * that are held by a player p
