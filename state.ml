@@ -33,6 +33,10 @@ type player = {
   mutable cards: card list;
 }
 
+let get_continents pl =
+  pl.continents
+
+
 type state = {
   mutable players_list: player list;
   mutable c_turn: string;
@@ -51,6 +55,9 @@ type state = {
 (* num of initial amount of troops allowed on board
  * subject to change
 *)
+
+let get_continent_id cont =
+  cont.continent_id
 
 let get_country_content ct =
   ct.c_id

@@ -14,6 +14,8 @@ type card
 
 type t_phase
 
+type continent
+
 type phase = SetUp | Game of t_phase
 
 (* [taken s p] returns a list representing the countries in s
@@ -68,6 +70,10 @@ val get_player_list: state -> player list
 val get_country_content: country -> string
 
 val getPhase: state -> phase
+
+val get_continent_id: continent -> string
+
+val get_continents: player -> continent list
 
 (* [remove_card s c] returns a state that has a
  * a card list that does not contain c
