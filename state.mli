@@ -85,6 +85,10 @@ val getDefendDice: state -> int list
 
 val get_countries: state -> country list
 
+val printOrder: state -> string
+
+val calc_troops: player -> int
+
 (* [remove_card s c] returns a state that has a
  * a card list that does not contain c
 *)

@@ -1,41 +1,45 @@
 open State
+open Ai
 open GMain
 open Gtk
 
 let _ = GMain.Rc.add_default_file ("buttoncolors.rc")
 let _ = GtkMain.Main.init ()
 
-
-let selectPlayers p ai r vbox =
-  let _ = vbox#destroy () in
-  let _ = GMain.Main.quit () in
-  r := string_of_int p ^ "/" ^ string_of_int ai
-
 let rec action cl box w st =
   (* let n = string_of_int ((int_of_string label#text) + 1) in
      label#set_text n *)
   let _ = box#destroy () in
-  if (List.hd cl) = "END"
-  then let st' = do' (EndPhaseC) st in draw w [] st'
+  if String.length (get_cplayer st) > 1
+  then draw w [] st
   else
-    match getPhase st with
-    | SetUp -> let st' = do' (ClaimC (List.hd cl)) st in draw w [] st'
-    | Game x ->
-      match x with
-      | Deploy -> let st' = do' (DeployC (1,(List.hd cl))) st in draw w [] st'
-      | Attack ->
+    if (List.hd cl) = "END"
+    then let st' = do' (EndPhaseC) st in draw w [] st'
+    else
+      match getPhase st with
+      | SetUp -> let st' = do' (ClaimC (List.hd cl)) st in draw w [] st'
+      | Game x ->
+        match x with
+        | Deploy -> let st' = do' (DeployC (1,(List.hd cl))) st in draw w [] st'
+        | Attack ->
+          if List.length cl = 1 then draw w cl st
+          else let st' = do' (AttackC (List.hd (List.rev cl), List.hd cl)) st in draw w [] st'
+        | Reinforce ->
         if List.length cl = 1 then draw w cl st
-        else let st' = do' (AttackC (List.hd (List.rev cl), List.hd cl)) st in draw w [] st'
-      | Reinforce ->
-      if List.length cl = 1 then draw w cl st
-      else let st' = do' (ReinforceC (1, List.hd (List.rev cl), List.hd cl)) st in draw w [] st'
+        else let st' = do' (ReinforceC (1, List.hd (List.rev cl), List.hd cl)) st in draw w [] st'
+and aiAction box w st =
+  let _ = print_string "ai actioning\n" in
+  let _ = box#destroy () in
+  let cmd = determine_move st in
+  let st' = do' (cmd) st in
+  draw w [] st'
 and draw window cl st =
   let _ = window#connect#destroy ~callback:GMain.Main.quit in
   let main_hbox = GPack.hbox ~packing:window#add ~width:1200 ~height:700 () in
   let gameBoard = GPack.fixed ~packing:main_hbox#add () in
   let _ = GMisc.image ~file: "images/riskmap.png" ~packing:(gameBoard#put ~x:0 ~y:0) () in
   let currentPlayer = GMisc.label ~text:(get_cplayer st) ~packing:(gameBoard#put ~x:1090 ~y:15) () in
-  let consoleMessage = GMisc.label ~text:((get_msg st)^"\n"^(getPhaseString st)) ~packing:(gameBoard#put ~x:1025 ~y:525) () in
+  let consoleMessage = GMisc.label ~text:((get_msg st)^"\n"^(getPhaseString st)^"\n"^(printOrder st)) ~packing:(gameBoard#put ~x:1025 ~y:525) () in
   let right_buttons = GPack.button_box `VERTICAL ~border_width:0 ~child_width:160 ~child_height:30
       ~spacing:10 ~packing:(gameBoard#put ~x:1020 ~y:40) () in
 
@@ -62,7 +66,7 @@ and draw window cl st =
   let _ = reinforceButton#connect#clicked ~callback: (fun () -> ()) in
   reinforceButton#misc#set_name ("reinforce" ^ string_phase st);
 
-  let finishButton = GButton.button ~label:"Finish" ~packing:right_buttons#add () in
+  let finishButton = GButton.button ~label:"Finish" ~packing:(right_buttons#add) () in
   let _ = finishButton#connect#clicked ~callback: (fun () -> action ("END"::cl) main_hbox window st) in
 
   let player_turn_image =
@@ -77,7 +81,7 @@ and draw window cl st =
                   "images/red.png" ~packing:(gameBoard#put ~x:1110 ~y:10) () in ())
     | "5" | "ae5" | "am5" | "ah5" -> (let _ = GMisc.image ~file:
                   "images/blue.png" ~packing:(gameBoard#put ~x:1110 ~y:10) () in ())
-    | _ -> (failwith "Wrong Player") in
+    | _ -> failwith ((get_cplayer st)) in
   let _ = player_turn_image in
 
   let countryTroops = getCountryTroops st in
@@ -284,12 +288,44 @@ and draw window cl st =
   let _ = dDice in
 
   let _ = window#show () in
-  let _ = GMain.Main.main () in ()
+  if String.length (get_cplayer st) > 1
+  then aiAction main_hbox window st
+  else
+    let _ = GMain.Main.main () in ()
+
+
+let selectPlayers p ai aiD r vbox =
+  let _ = vbox#destroy () in
+  let _ = GMain.Main.quit () in
+  match aiD with
+  |"e"->r := string_of_int p ^ "/" ^ string_of_int ai ^ "/0/0"
+  |"m"->r := string_of_int p ^ "/0/" ^ string_of_int ai ^ "/0"
+  |"h"->r := string_of_int p ^ "/0/0/" ^ string_of_int ai
+  |_->r := string_of_int p ^ "/0/0/0"
+
+
+
+let selectAIDifficulty p ai r vbox window=
+  let _ = vbox#destroy () in
+  let main_vbox = GPack.vbox ~packing:window#add () in
+  let _ = GMisc.label ~text:"Risk" ~packing:main_vbox#add ~height:50 () in
+  let _ = GMisc.label ~text:"Select the Difficulty of the AI Players" ~packing:main_vbox#add () in
+  let hbox1 = GPack.button_box `HORIZONTAL ~border_width:20 ~child_width:100 ~child_height:100
+      ~spacing:20 ~packing:main_vbox#add () in
+  let p0 = GButton.button ~label:"Easy" ~packing:hbox1#add () in
+  let _ = p0#connect#clicked ~callback: (fun () -> selectPlayers p ai "e" r main_vbox) in
+  let p1 = GButton.button ~label:"Medium" ~packing:hbox1#add () in
+  let _ = p1#connect#clicked ~callback: (fun () -> selectPlayers p ai "m" r main_vbox) in
+  let p2 = GButton.button ~label:"Hard" ~packing:hbox1#add () in
+  let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers p ai "h" r main_vbox) in
+  ()
+
 
 let selectHumanPlayers num r vbox window =
   let _ = vbox#destroy () in
   let main_vbox = GPack.vbox ~packing:window#add () in
-  let instruct = GMisc.label ~text:"Please Select the Number of Human/AI Players" ~packing:main_vbox#add () in
+  let _ = GMisc.label ~text:"Risk" ~packing:main_vbox#add ~height:50 () in
+  let _ = GMisc.label ~text:"Select the Number of AI Players" ~packing:main_vbox#add () in
   let vbox = GPack.vbox ~border_width:10 ~packing:main_vbox#add () in
   let hbox1 = GPack.button_box `HORIZONTAL ~border_width:20 ~child_width:100 ~child_height:100
       ~spacing:20 ~packing:vbox#add () in
@@ -297,36 +333,50 @@ let selectHumanPlayers num r vbox window =
       ~spacing:20 ~packing:vbox#add () in
   (* let biggerWindow = GWindow.window ~width:1000 ~height:800 ~title:"Game" ~border_width:10 () in *)
   match num with
+  | 0 ->
+    let p3 = GButton.button ~label:"2 AI Players" ~packing:hbox1#add () in
+    let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 2 r main_vbox window) in
+    let p4 = GButton.button ~label:"3 AI Players" ~packing:hbox1#add () in
+    let _ = p4#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 3 r main_vbox window) in
+    let p5 = GButton.button ~label:"4 AI Players" ~packing:hbox2#add () in
+    let _ = p5#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 4 r main_vbox window) in
+    let p6 = GButton.button ~label:"5 AI Players" ~packing:hbox2#add () in
+    let _ = p6#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 5 r main_vbox window)
+    in ()
+  | 1 ->
+    let p2 = GButton.button ~label:"1 AI Player" ~packing:hbox1#add () in
+    let _ = p2#connect#clicked ~callback: (fun () -> selectAIDifficulty 1 1 r main_vbox window) in
+    let p3 = GButton.button ~label:"2 AI Players" ~packing:hbox1#add () in
+    let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 1 2 r main_vbox window) in
+    let p4 = GButton.button ~label:"3 AI Players" ~packing:hbox2#add () in
+    let _ = p4#connect#clicked ~callback: (fun () -> selectAIDifficulty 1 3 r main_vbox window) in
+    let p5 = GButton.button ~label:"4 AI Players" ~packing:hbox2#add () in
+    let _ = p5#connect#clicked ~callback: (fun () -> selectAIDifficulty 1 4 r main_vbox window)
+    in ()
   | 2 ->
-    let title = GMisc.label ~text:"2 Players Selected." ~packing:main_vbox#add ~height:50 () in
-    let p2 = GButton.button ~label:"2 Human & 0 AI Players" ~packing:hbox1#add () in
-    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 2 0 r main_vbox) in
-    let p3 = GButton.button ~label:"1 Human & 1 AI Player" ~packing:hbox1#add () in
-    let _ = p3#connect#clicked ~callback: (fun () -> selectPlayers 1 1 r main_vbox) in
-    let p4 = GButton.button ~label:"0 Humans & 2 AI Players" ~packing:hbox2#add () in
-    let _ = p4#connect#clicked ~callback: (fun () -> selectPlayers 0 2 r main_vbox) in ()
+    let p2 = GButton.button ~label:"0 AI Players" ~packing:hbox1#add () in
+    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 2 0 "" r main_vbox) in
+    let p3 = GButton.button ~label:"1 AI Player" ~packing:hbox1#add () in
+    let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 2 1 r main_vbox window) in
+    let p4 = GButton.button ~label:"2 AI Players" ~packing:hbox2#add () in
+    let _ = p4#connect#clicked ~callback: (fun () -> selectAIDifficulty 2 2 r main_vbox window) in
+    let p5 = GButton.button ~label:"3 AI Players" ~packing:hbox2#add () in
+    let _ = p5#connect#clicked ~callback: (fun () -> selectAIDifficulty 2 3 r main_vbox window)
+    in ()
   | 3 ->
-    let title = GMisc.label ~text:"3 Players Selected." ~packing:main_vbox#add ~height:50 () in
-    let p2 = GButton.button ~label:"3 Human & 0 AI Players" ~packing:hbox1#add () in
-    let _ =p2#connect#clicked ~callback: (fun () -> selectPlayers 3 0 r main_vbox) in
-    let p3 = GButton.button ~label:"2 Human & 1 AI Player" ~packing:hbox1#add () in
-    let _ = p3#connect#clicked ~callback: (fun () -> selectPlayers 2 1 r main_vbox) in
-    let p4 = GButton.button ~label:"1 Humans & 2 AI Players" ~packing:hbox2#add () in
-    let _ = p4#connect#clicked ~callback: (fun () -> selectPlayers 1 2 r main_vbox) in
-    let p5 = GButton.button ~label:"0 Humans & 3 AI Players" ~packing:hbox2#add () in
-    let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 0 0 r main_vbox) in ()
+    let p2 = GButton.button ~label:"0 AI Players" ~packing:hbox1#add () in
+    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 3 0 "" r main_vbox) in
+    let p3 = GButton.button ~label:"1 AI Player" ~packing:hbox1#add () in
+    let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 3 1 r main_vbox window) in
+    let p4 = GButton.button ~label:"2 AI Players" ~packing:hbox2#add () in
+    let _ = p4#connect#clicked ~callback: (fun () -> selectAIDifficulty 3 2 r main_vbox window) in
+     ()
   | 4 ->
-    let title = GMisc.label ~text:"4 Players Selected." ~packing:main_vbox#add ~height:50 () in
-    let p2 = GButton.button ~label:"4 Humans & 0 AI Players" ~packing:hbox1#add () in
-    let _ =p2#connect#clicked ~callback: (fun () -> selectPlayers 4 0 r main_vbox) in
-    let p3 = GButton.button ~label:"3 Human & 1 AI Player" ~packing:hbox1#add () in
-    let _ = p3#connect#clicked ~callback: (fun () -> selectPlayers 3 1 r main_vbox) in
-    let p4 = GButton.button ~label:"2 Humans & 2 AI Players" ~packing:hbox2#add () in
-    let _ = p4#connect#clicked ~callback: (fun () -> selectPlayers 2 2 r main_vbox) in
-    let p5 = GButton.button ~label:"1 Humans & 3 AI Players" ~packing:hbox2#add () in
-    let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 1 3 r main_vbox) in
-    let p6 = GButton.button ~label:"0 Humans & 4 AI Players" ~packing:hbox2#add () in
-    let _ =p6#connect#clicked ~callback: (fun () -> selectPlayers 0 4 r main_vbox) in ()
+    let p2 = GButton.button ~label:"0 AI Players" ~packing:hbox1#add () in
+    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 4 0 "" r main_vbox) in
+    let p3 = GButton.button ~label:"1 AI Player" ~packing:hbox1#add () in
+    let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 4 1 r main_vbox window) in
+    ()
   | _ -> failwith ("Cannot be possible!")
 
 let init_gui () =
@@ -334,22 +384,27 @@ let init_gui () =
   let window = GWindow.window ~title:"Risk" ~border_width:10 () in
   let _ = window #connect#destroy ~callback:GMain.Main.quit in
   let main_vbox = GPack.vbox ~packing:window#add () in
-  let title = GMisc.label ~text:"Risk" ~packing:main_vbox#add ~height:50 () in
-  let instruct = GMisc.label ~text:"Please Select the Number of Players" ~packing:main_vbox#add () in
+  let _ = GMisc.label ~text:"Risk" ~packing:main_vbox#add ~height:50 () in
+  let _ = GMisc.label ~text:"Please Select the Number of Human Players" ~packing:main_vbox#add () in
   let vbox = GPack.vbox ~border_width:10 ~packing:main_vbox#add () in
   let hbox1 = GPack.button_box `HORIZONTAL ~border_width:20 ~child_width:100 ~child_height:100
       ~spacing:20 ~packing:vbox#add () in
   let hbox2 = GPack.button_box `HORIZONTAL ~border_width:20 ~child_width:100 ~child_height:100
       ~spacing:20 ~packing:vbox#add () in
-  let biggerWindow = GWindow.window ~width:1000 ~height:800 ~title:"Game" ~border_width:10 () in
-  let p2 = GButton.button ~label:"2 Players" ~packing:hbox1#add () in
+  let hbox3 = GPack.button_box `HORIZONTAL ~border_width:20 ~child_width:100 ~child_height:100
+      ~spacing:20 ~packing:vbox#add () in
+  let p0 = GButton.button ~label:"0 Human Players" ~packing:hbox1#add () in
+  let _ = p0#connect#clicked ~callback: (fun () -> selectHumanPlayers 0 r main_vbox window) in
+  let p1 = GButton.button ~label:"1 Human Players" ~packing:hbox1#add () in
+  let _ = p1#connect#clicked ~callback: (fun () -> selectHumanPlayers 1 r main_vbox window) in
+  let p2 = GButton.button ~label:"2 Human Players" ~packing:hbox2#add () in
   let _ = p2#connect#clicked ~callback: (fun () -> selectHumanPlayers 2 r main_vbox window) in
-  let p3 = GButton.button ~label:"3 Players" ~packing:hbox1#add () in
+  let p3 = GButton.button ~label:"3 Human Players" ~packing:hbox2#add () in
   let _ = p3#connect#clicked ~callback: (fun () -> selectHumanPlayers 3 r main_vbox window) in
-  let p4 = GButton.button ~label:"4 Players" ~packing:hbox2#add () in
+  let p4 = GButton.button ~label:"4 Human Players" ~packing:hbox3#add () in
   let _ = p4#connect#clicked ~callback: (fun () -> selectHumanPlayers 4 r main_vbox window) in
-  let p5 = GButton.button ~label:"5 Players" ~packing:hbox2#add () in
-  let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 5 0 r main_vbox) in
+  let p5 = GButton.button ~label:"5 Human Players" ~packing:hbox3#add () in
+  let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 5 0 "" r main_vbox) in
   let _ = window#show () in
   (* Enter the event loop *)
   let _ = GMain.Main.main () in

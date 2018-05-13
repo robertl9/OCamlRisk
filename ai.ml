@@ -1,12 +1,6 @@
 open State
 open Command
 
-  (* checks difficulty of player *)
-  let is_beg p =
-    match p.real with
-    | AI(d) -> d = Beginner
-    | _ -> false
-
   (* returns an assoc lst of all countries in game and the number of troops on them*)
   let get_troops_lst st =
     List.flatten (List.fold_left (@) (List.map (fun x-> get_player_countries x) (get_player_list st)) [])
@@ -22,13 +16,6 @@ open Command
   | DeployC(num, ctry) -> DeployC(num + 1, ctry)
   | _ -> failwith "Not a deploy command"
 
-  (* returns a state after calling each command in lst,
-   * in order from head to tail, on st*)
-  let rec do_com_lst st lst =
-    match lst with
-    | [] -> st
-    | a::b -> do_com_lst (do' a st) lst (* print message here too? *)
-
   let dep_rank c1 player lst=
     let enemy_neighbors = List.filter (fun x-> not (List.mem_assoc x (get_player_countries player))) (get_neighbors c1) in
     (* diff between troops on this country and troops on all other countries should count a bit *)
@@ -37,22 +24,38 @@ open Command
     *)
     let c1_troop_diffs = List.map (fun x -> (List.assoc x !lst)
       - (List.assoc (get_country_id c1) !lst)) enemy_neighbors in
-
     (* if high, greater need for country to gian more troops*)
     List.fold_left (+) 0 c1_troop_diffs
 
+let get_rand_item lst = List.nth lst (Random.int (List.length lst))
 
   (* takes in state*)
-  let smart_deploy st =
+let ai_deploy st =
+  DeployC(1,"Volantis")
+  (* let _ = print_string "got player\n" in
     let player = get_player_by_id st (get_cplayer st) in
-    let num_deploy = get_num_deploy player in
-    let troop_ctry_lst = ref (get_troops_lst st) in
-
-    let dep_rank_sort c1 c2 =
+    let _ = print_string "got player\n" in
+    let num_deploy = if getPhase st = SetUp then 1 else calc_troops player in
+    let _ = print_string "calculatinng troops\n" in *)
+    (* let troop_ctry_lst = ref (get_troops_lst st) in
+    let ai_diff = String.sub (get_cplayer st) 1 1 in *)
+    (* let dep_rank_sort c1 c2 =
       let c1_score = dep_rank c1 player troop_ctry_lst in
       let c2_score = dep_rank c2 player troop_ctry_lst in
-      if c1_score = c2_score then 0 else if c1_score > c2_score then 1 else -1 in
-
+      if c1_score = c2_score then 0 else if c1_score > c2_score then 1 else -1 in *)
+    (* deploys troops to random countries*)
+    (* let simp_deploy st =
+      let _ = print_string "ai simpdep\n" in
+      let num_to_dep = Random.int num_deploy in
+      DeployC(num_to_dep, (fst (get_rand_item (get_player_countries player)))) in *)
+    (* deploys all bonus troops ot the country in most need*)
+    (* let mid_deploy st =
+      let _ = print_string "ai middep\n" in
+      let sorted_lst = List.sort dep_rank_sort
+        (List.map (fun x -> get_country (fst x) st) (get_player_countries player)) in
+      let ctry_to_dep = get_country_id (List.hd (sorted_lst)) in
+      DeployC(num_deploy, ( ctry_to_dep)) in
+    (*deploys 1 troop to country in need, then recalculates need*)
     let rec dep_helper num acc=
       if num = 0 then acc
       else
@@ -75,54 +78,61 @@ open Command
         let () = troop_ctry_lst := List.map (fun x ->
           if (fst x) = ctry_to_dep then ((fst x), (snd x) + 1) else x)
           !troop_ctry_lst in
-        dep_helper (num - 1) acc in
+        dep_helper (num - 1) acc in *)
+    (* needs to be updated *)
+  (* if ai is easy, do simp_deploy, else if mid, do mid_deploy, else (hard) do below*)
+    (* simp_deploy st *)
+    (* if ai_diff = "e" then simp_deploy st *)
+    (* else if ai_diff = "m" then mid_deploy st
+    else List.hd(dep_helper num_deploy []) *)
 
-     let dep_lst = dep_helper num_deploy [] in
-     do_com_lst st dep_lst
-
-
-  let smart_claim st =
+let ai_claim st =
+  if get_unclaimed st = [] then ai_deploy st
+  else
+    let _ = print_string "ai claiminng\n" in
     let player = get_player_by_id st (get_cplayer st) in
+    let _ = print_string "ai playing\n" in
+    let ai_diff = String.sub (get_cplayer st) 1 1 in
+    let _ = print_string "ai diffing\n" in
+
     (* ranking countries to claim*)
     let claim_rank c1 =
       (*get amount of other countries player has on same continent*)
-      let c1_com_conts = List.length (List.filter (fun x -> (fst x) = get_country_content c1) (get_player_countries player)) in
+      let c1_com_conts = List.length (List.filter (fun x -> get_country_content x = get_country_content c1)
+                (List.map (fun y-> get_country y st) (List.map (fun z -> fst z) (get_player_countries player)))) in
       (*see how many countries held have current country as a neighbor*)
       let c1_neighbors = List.length (List.filter
         (fun x -> List.mem (get_country_id c1) (get_neighbors (get_country (fst x) st))) (get_player_countries player)) in
       c1_com_conts + c1_neighbors in
-
     (* used to sort the list *)
     let comp_c_rank c1 c2 =
       let c1_score = claim_rank(c1) in
       let c2_score = claim_rank(c2) in
       if c1_score = c2_score then 0 else if c1_score > c2_score then 1 else -1 in
-
     let simp_claim st =
       List.nth (get_unclaimed st) (Random.int (List.length (get_unclaimed st))) in
-
     (* list of continents that player has a country in *)
-    let owned_conts = List.map (fun x -> get_continent_id x) (get_continents player) in
-
+    let owned_conts =
+      List.map (fun x -> get_continent_id x) (get_continents player) in
     (* get list of countries available that are in continents that the player also has a country in*)
-    let opt_countries = List.filter (fun x ->
-        (List.mem (get_country_content (get_country x st)) owned_conts)) (get_unclaimed(st))  in
-
+    let opt_countries =
+      List.filter (fun x ->
+          (List.mem (get_country_content (get_country x st)) owned_conts)) (get_unclaimed(st))  in
     let ctry =
       (* choose random country if beginner, or there exists no
        * unavailable countries on continents that player owns
        *)
-      if (opt_countries = [] || is_beg player) && get_unclaimed st != []
+      if (opt_countries = [] || ai_diff = "e") && get_unclaimed st != []
       then simp_claim st
       else get_country_id (List.hd (List.sort comp_c_rank (List.map (fun x -> (get_country x st)) opt_countries)))in
-    if get_unclaimed st!= [] then do' (ClaimC(ctry)) st
-    else smart_deploy st
+    let _ = print_string (List.nth (get_unclaimed st) (Random.int (List.length (get_unclaimed st)))) in
+    if get_unclaimed st != [] then ClaimC(ctry)
+    else ai_deploy st
 
-
-let rec smart_attack st =
+let rec ai_attack st =
   let player = get_player_by_id st (get_cplayer st) in
   let troop_ctry_lst = ref (get_troops_lst st) in
-
+  let ai_diff = String.sub (get_cplayer st) 1 1 in
   let defend_sort_helper def attacker=
     (*higher, bigger pos difference between attacking and defending country*)
     let troop_diff_factor = (List.assoc (get_country_id attacker) !troop_ctry_lst)
@@ -132,13 +142,14 @@ let rec smart_attack st =
       then let addit_ctrys = List.length (List.filter (fun x -> x = (get_country_content def))
         (List.map (fun x -> fst x) (get_player_countries player))) in
       2 * troop_diff_factor + addit_ctrys else 0 in
-    troop_diff_factor + cont_factor in
+    (*change ranking factor based on difficulty*)
+    if ai_diff = "h" then troop_diff_factor + cont_factor else troop_diff_factor in
   (* returns best country for given country to attack *)
   let attack_sort_helper tuple =
     (*tuple is an attacker, and list of potential defenders*)
     let att = fst tuple in
     let lst = snd tuple in
-     let defend_sort def1 def2 =
+    let defend_sort def1 def2 =
       let def1_score = defend_sort_helper def1 att in
       let def2_score = defend_sort_helper def2 att in
       if def1_score = def2_score then 0
@@ -152,14 +163,13 @@ let rec smart_attack st =
       then let addit_ctrys = List.length (List.filter (fun x -> x = (get_country_content def))
         (List.map (fun x -> fst x) (get_player_countries player))) in
       2 * troop_diff_factor + addit_ctrys else 0 in
-    troop_diff_factor + cont_factor in
-
+    (*change ranking factor based on difficulty*)
+    if ai_diff = "h" then troop_diff_factor + cont_factor else troop_diff_factor in
   let attack_sort tup1 tup2 =
     let tup1_score = attack_sort_helper tup1 in
     let tup2_score = attack_sort_helper tup2 in
     if tup1_score = tup2_score then 0
     else if tup1_score > tup2_score then 1 else -1 in
-
   (*returns tuple of attacker, defender
    * tuple_lst is a list of (countyr, defender list) tuples
    *)
@@ -168,7 +178,6 @@ let rec smart_attack st =
     let attacker_tup = List.hd (List.sort attack_sort tuple_lst) in
     let att = fst attacker_tup in
     let def_lst = snd attacker_tup in (*list of possible defenders*)
-
     let def =
       let def_rank def1 def2 =
         let def1_score = defend_sort_helper def1 att in
@@ -177,7 +186,6 @@ let rec smart_attack st =
         else if def1_score > def2_score then 1 else -1 in
       List.hd (List.sort def_rank def_lst) in
     (att, def) in
-
   (*gets strings of countries player owns*)
   let ctry_strings = List.map (fun x -> fst x) (get_player_countries player) in
   let plyr_ctries = List.filter (fun x -> List.mem (get_country_id x) ctry_strings) (get_countries st) in
@@ -191,20 +199,22 @@ let rec smart_attack st =
   let defender = snd att_def_tup in
   let troop_diff = (snd (List.find (fun x -> (fst x) = (get_country_id attacker)) !troop_ctry_lst)) -
     (snd (List.find (fun x -> (fst x) = (get_country_id defender)) !troop_ctry_lst)) in
-
   (* depending on troop_diff, choose whether or not to attack *)
-  let new_st = if troop_diff > 1
-    then smart_attack (do' (AttackC(get_country_id attacker, get_country_id defender)) st)
-    else do' EndPhaseC st in
-  new_st
+  let com =
+    if troop_diff < 2 then EndPhaseC
+    else if ai_diff = "e" then
+      (*get random defender*)
+      let defender = get_rand_item (get_enemies (get_neighbors attacker)) in
+      AttackC(get_country_id attacker, get_country_id defender)
+    else AttackC(get_country_id attacker, get_country_id defender) in
+  com
 
-
-let rec smart_rein st =
+let ai_rein st =
   let player = get_player_by_id st (get_cplayer st) in
   let troop_ctry_lst = ref (get_troops_lst st) in
   let ctry_strings = List.map (fun x -> (fst x)) (get_player_countries player) in
   let plyr_ctries = List.filter (fun x -> (List.mem (get_country_id x) ctry_strings)) (get_countries st) in
-
+  let ai_diff = String.sub (get_cplayer st) 1 1 in
   (* get total difference between a country's troops
    * and its enemy neighbor troops
    * if the country has no neighbors owned by player, give score of 0*)
@@ -213,20 +223,16 @@ let rec smart_rein st =
     let num_own_neighs = List.length(List.filter (fun x -> List.mem x ctry_strings) (get_neighbors c1)) in
     if num_own_neighs = 0 then 0
       else (dep_rank c1 player troop_ctry_lst) in
-
-  let rein_sort ctry1 ctry2=
+  let rein_sort ctry1 ctry2 =
     let rein1_score = rein_sort_helper ctry1 in
     let rein2_score = rein_sort_helper ctry2 in
     if rein1_score = rein2_score then 0
       else if rein1_score > rein2_score then 1 else -1 in
-
   let ctry_to_rein = List.hd(List.sort rein_sort plyr_ctries) in
-
   (* check number of friendly neighbors...
    * in the case that it's 0, cannot reinforce, return end *)
   let num_rein_neighs = List.length(List.filter (fun x -> List.mem x ctry_strings) (get_neighbors ctry_to_rein)) in
-
-  let new_st = if num_rein_neighs = 0 then do' EndPhaseC st
+  let com = if num_rein_neighs = 0 then EndPhaseC
     else
       (*find country to be used to reinforce, *)
       let take_rank c1 =
@@ -235,13 +241,11 @@ let rec smart_rein st =
         - (List.assoc x !troop_ctry_lst)) enemy_neighbors in
         (* if high, country has troops to spare*)
         List.fold_left (+) 0 c1_troop_diffs in
-
       let take_sort ctry1 ctry2=
         let take1_score = take_rank ctry1 in
         let take2_score = take_rank ctry2 in
         if take1_score = take2_score then 0
           else if take1_score > take2_score then 1 else -1 in
-
       (*returns list of string of countries linked with *)
       let rec get_links visited frontier =
         (* make sure added elements are not already on frontier, have not been visited,
@@ -249,7 +253,6 @@ let rec smart_rein st =
         let keep_in x =
           (List.mem x (List.map (fun x -> (fst x)) (get_player_countries player)))
           && (not ((List.mem x frontier) || (List.mem x visited)) ) in
-
         if frontier = [] then visited
         else
           let popped, frontier, new_visited =
@@ -258,7 +261,7 @@ let rec smart_rein st =
             | ctry_id::b -> ctry_id, b, ctry_id::visited
             (* method would return false in match above
               before calling check_links with empty frontier *)
-            | _ -> failwith "Program failure" in
+            | _ -> failwith "Frontier is empty" in
 
           (* adding neighboring countries to frontier that are not already in frontier,
            * that are held by current player, and that have not been visited yet*)
@@ -269,33 +272,46 @@ let rec smart_rein st =
         (*initial fronties consists of country's neighbors owned by player*)
       let init_rein_links = (List.filter (fun x-> (List.mem x ctry_strings)) (get_neighbors ctry_to_rein)) in
       let get_take_lst = get_links [] init_rein_links in
-
       let ctry_to_take = List.hd(List.sort take_sort
         (List.map (fun x -> (get_country x st)) (get_links [] get_take_lst))) in
-
       (*number of troops on country to take from, country to put on*)
       let num_on_take = (snd (List.find (fun x -> (fst x) = get_country_id ctry_to_take) !troop_ctry_lst)) in
       let num_on_rein = (snd (List.find (fun x -> (fst x) = get_country_id ctry_to_rein) !troop_ctry_lst)) in
-
       (*measure of strength of enemies near ctrys*)
       let rein_enemy_score = dep_rank ctry_to_rein player troop_ctry_lst in
       let take_enemy_score = dep_rank ctry_to_rein player troop_ctry_lst in
+      let step_com =
+        (*easy ai path*)
+        if ai_diff = "e" then
+          (*getting neighbors of country to reinforce that have more than one troop*)
+          if rein_enemy_score > 0 || (rein_enemy_score < 0 && take_enemy_score < 0) then EndPhaseC
+          else let valid_neighs = List.filter (fun x ->
+              (snd (List.find (fun x -> (fst x) = get_country_id ctry_to_take) !troop_ctry_lst)) > 1) get_take_lst in
+            let ctry_to_take = get_rand_item valid_neighs in
+            let num_on_take = (snd (List.find (fun x -> (fst x) = ctry_to_take) !troop_ctry_lst)) in
+            ReinforceC(num_on_take/2, get_country_id ctry_to_rein, ctry_to_take)
+        (*mid ai path*)
+              else if ai_diff = "m" then
+          if num_on_take = 1 || (rein_enemy_score > 0) || (rein_enemy_score < 0 && take_enemy_score < 0) then EndPhaseC
+          else ReinforceC(num_on_take/2, get_country_id ctry_to_rein, get_country_id ctry_to_take)
+        (*if hard ai path*)
+        else
+          if num_on_take = 1 || (rein_enemy_score > 0) || (rein_enemy_score < 0 && take_enemy_score < 0) then EndPhaseC
+          else if num_on_rein > num_on_take
+          (*take half of troops from ctry_to_take, put them on ctry_to_rein *)
+          then ReinforceC(num_on_take/2, get_country_id ctry_to_rein, get_country_id ctry_to_take)
+          (*num_rein reresents number of troops to place*)
+          else let num_rein= if num_on_take <= num_on_rein then num_on_take/2
+            else num_on_take - 1 in
+          ReinforceC(num_rein, get_country_id ctry_to_rein, get_country_id ctry_to_take)
+      in step_com in com
 
-      let step_st = if num_on_rein = 1 || (rein_enemy_score > 0) then do' EndPhaseC st
-        else if num_on_rein > num_on_take
-        (*take half of troops from ctry_to_take, put them on ctry_to_rein *)
-        then smart_rein(do' (ReinforceC(num_on_take/2, get_country_id ctry_to_rein, get_country_id ctry_to_take)) st)
-        (*num_rein reresents number of troops to place*)
-        else let num_rein= if num_on_take <= num_on_rein then num_on_take/2
-          else num_on_take - 1 in
-        smart_rein(do' (ReinforceC(num_rein, get_country_id ctry_to_rein, get_country_id ctry_to_take)) st) in
-        step_st in new_st
-
-let rec determine_move st =
-  match st.c_phase with
-  | SetUp ->  determine_move (smart_claim st)
+let determine_move st =
+  let _ = print_string "ai movinng\n" in
+  match getPhase st with
+  | SetUp -> ai_claim st
   | Game(p)->
-        match p with
-        |Deploy -> determine_move (smart_deploy st)
-        |Attack -> determine_move (smart_attack st)
-        |Reinforce -> smart_rein st
+    match p with
+    |Deploy -> ai_deploy st
+    |Attack -> ai_attack st
+    |Reinforce -> ai_rein st

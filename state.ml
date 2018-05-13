@@ -148,28 +148,30 @@ let rec aiE p n l =
   else let player = {id = "ae"^string_of_int (p+n); character = JonSnow; deploy = 0;
                      continents = []; countries_held = []; cards = [];} in
     let npl = player::l in
-    players (n-1) npl
+    aiE p (n-1) npl
 
 let rec aiM p n l =
   if n == 0 then l
   else let player = {id = "am"^string_of_int (p+n); character = JonSnow; deploy = 0;
                      continents = []; countries_held = []; cards = [];} in
+    let _ = print_int n in
+    let _ = print_string (player.id^"\n") in
     let npl = player::l in
-    players (n-1) npl
+    aiM p (n-1) npl
 
 let rec aiH p n l =
   if n == 0 then l
   else let player = {id = "ah"^string_of_int (p+n); character = JonSnow; deploy = 0;
                      continents = []; countries_held = []; cards = [];} in
     let npl = player::l in
-    players (n-1) npl
+    aiH p (n-1) npl
 
 let order n p eAI mAI hAI =
   let ol = Array.make n "" in
   for i = 0 to p-1 do ol.(i)<-(string_of_int (i+1)) done;
-  for i = p to eAI-1 do ol.(i)<-("ae"^string_of_int (i+1)) done;
-  for i = eAI to mAI-1 do ol.(i)<-("am"^string_of_int (i+1)) done;
-  for i = mAI to hAI-1 do ol.(i)<-("ah"^string_of_int (i+1)) done; ol
+  for i = p to p+eAI-1 do ol.(i)<-("ae"^string_of_int (i+1)) done;
+  for i = p+eAI to p+eAI+mAI-1 do ol.(i)<-("am"^string_of_int (i+1)) done;
+  for i = p+eAI+mAI to p+eAI+mAI+hAI-1 do ol.(i)<-("ah"^string_of_int (i+1)) done; ol
 
 let init_state p eAI mAI hAI j =
   let continents = j|> member "continents" |> to_list |> List.map to_continents in
@@ -178,8 +180,9 @@ let init_state p eAI mAI hAI j =
   let repl_msg = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!" in
   let fog_of_war = j |> member "fog_of_war" |> to_string in
   let win = j|> member "win_message" |> to_string in
+  let orderl = order (p+eAI+mAI+hAI) p eAI mAI hAI in
   {players_list = (players p []) @ (aiE p eAI []) @ (aiM p mAI []) @ (aiH p hAI []);
-   c_turn = "1"; turns = order (p+eAI+mAI+hAI) p eAI mAI hAI; turn = 0; c_phase = SetUp;
+   c_turn = orderl.(0); turns = orderl; turn = 0; c_phase = SetUp;
    continents = continents; countries = countries; unclaimed = u_countries;
    card_l = init_cards (); attackDice = []; defendDice = [];
    fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
@@ -229,7 +232,7 @@ let pick_country c st =
   else let _ = st.repl_msg <- "Invalid Country/Country Taken" in st
 
 let get_country str_country state =
-  List.find (fun x -> x.country_id = str_country) state.countries
+  List.find (fun x -> String.uppercase_ascii x.country_id = String.uppercase_ascii str_country) state.countries
 
 let rec get_defender c pl npl =
   let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then true else x || false in
@@ -246,6 +249,13 @@ let roll n =
 let get_troops c p =
   let f x (k,v) = if c = k then v else x + 0 in
   List.fold_left f 0 p.countries_held
+
+let calc_troops player =
+  if player.deploy = 0 then
+    (if ((List.length player.countries_held)/3 <= 3)
+    then 3 else (List.length player.countries_held)/3) +
+    List.fold_left (fun x y -> x + y.bonus_troops) 0 player.continents
+  else player.deploy
 
 (*returns sum of all troops held by a player*)
 let sum_troops p =
@@ -465,6 +475,9 @@ let rec string_of_list l s =
   | [] -> s
   | h::t -> string_of_list t (s^h^"\n")
 
+let printOrder st =
+  string_of_list (Array.to_list st.turns) ""
+
 let rec string_of_continent l s =
   match l with
   | [] -> s
@@ -493,7 +506,7 @@ let do' cmd st =
   match st.c_phase with
   | SetUp -> (match cmd with
       | ClaimC (c) when st.unclaimed != [] -> let st' = pick_country (String.uppercase_ascii c) st in
-        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
+        let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | ClaimC (c) when st.unclaimed = [] ->
         let st' = inc_troop 1 (String.uppercase_ascii c) st in
         let _ =
@@ -502,10 +515,10 @@ let do' cmd st =
           else
             let _ = st'.turn <- st'.turn + 1 in
             let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in () in
-        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
+        let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | DeployC (n,c) when n == 1 ->
         let st' = inc_troop 1 (String.uppercase_ascii c) st in
-        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
+        let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
   | Game x -> (match x with
       | Deploy -> (match cmd with
@@ -592,6 +605,7 @@ let get_player_of_state s =
   in helper s.players_list
 
 let get_player_by_id s id =
+  let _ = print_string "rob's fault" in
   let rec helper plyrs =
     match plyrs with
     | [] -> failwith ("Player id not in list of players!")

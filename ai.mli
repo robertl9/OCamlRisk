@@ -4,4 +4,4 @@
    state which is best for the current player which means it is the worst for all the
    other players.
 *)
-val determineMove : state -> action
+val determine_move : State.state -> Command.command
