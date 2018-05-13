@@ -58,6 +58,9 @@ type state = {
  * subject to change
 *)
 
+let get_countries st =
+  st.countries
+
 let getCountryTroops st =
   let rec append pl l =
     match pl with
