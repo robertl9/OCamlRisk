@@ -582,6 +582,22 @@ let get_player_by_id s id =
       else helper t
   in helper s.players_list
 
+let rec iterate_through_countries lst id =
+  match lst with
+  | [] -> false
+  | h::t -> if h = id then true
+    else iterate_through_countries t id
+
+let country_owned_by_player s country_id =
+  let rec helper plyrs =
+    match plyrs with
+    | [] -> failwith ("Not Possible! Country not owned by list!")
+    | h::t -> let country_ids = (List.map (fun (k,v) -> k) h.countries_held) in
+      if iterate_through_countries country_ids country_id
+      then h.id else helper t
+  in helper s.players_list
+
+
 (* [taken s p] returns a list representing the countries in s
  * that are held by a player p
 *)
