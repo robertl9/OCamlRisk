@@ -591,7 +591,7 @@ let rec iterate_through_countries lst id =
 let country_owned_by_player s country_id =
   let rec helper plyrs =
     match plyrs with
-    | [] -> failwith ("Not Possible! Country not owned by list!")
+    | [] -> "Unheld"
     | h::t -> let country_ids = (List.map (fun (k,v) -> k) h.countries_held) in
       if iterate_through_countries country_ids country_id
       then h.id else helper t
