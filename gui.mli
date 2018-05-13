@@ -1,2 +1,2 @@
 val init_gui: unit -> string
-val draw: State.state -> unit
+val draw: GWindow.window -> string list -> State.state -> unit
