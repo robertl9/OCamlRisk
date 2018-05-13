@@ -143,26 +143,43 @@ let rec players n l =
     let npl = player::l in
     players (n-1) npl
 
-let rec ai p n l =
+let rec aiE p n l =
   if n == 0 then l
-  else let player = {id = "a"^string_of_int (p+n); character = JonSnow; deploy = 0;
+  else let player = {id = "ae"^string_of_int (p+n); character = JonSnow; deploy = 0;
                      continents = []; countries_held = []; cards = [];} in
     let npl = player::l in
     players (n-1) npl
 
-let order n p ai =
+let rec aiM p n l =
+  if n == 0 then l
+  else let player = {id = "am"^string_of_int (p+n); character = JonSnow; deploy = 0;
+                     continents = []; countries_held = []; cards = [];} in
+    let npl = player::l in
+    players (n-1) npl
+
+let rec aiH p n l =
+  if n == 0 then l
+  else let player = {id = "ah"^string_of_int (p+n); character = JonSnow; deploy = 0;
+                     continents = []; countries_held = []; cards = [];} in
+    let npl = player::l in
+    players (n-1) npl
+
+let order n p eAI mAI hAI =
   let ol = Array.make n "" in
   for i = 0 to p-1 do ol.(i)<-(string_of_int (i+1)) done;
-  for i = p to n-1 do ol.(i)<-("a"^string_of_int (i+1)) done; ol
+  for i = p to eAI-1 do ol.(i)<-("ae"^string_of_int (i+1)) done;
+  for i = eAI to mAI-1 do ol.(i)<-("am"^string_of_int (i+1)) done;
+  for i = mAI to hAI-1 do ol.(i)<-("ah"^string_of_int (i+1)) done; ol
 
-let init_state p ai_p j =
+let init_state p eAI mAI hAI j =
   let continents = j|> member "continents" |> to_list |> List.map to_continents in
   let countries = j|> member "countries" |> to_list |> List.map to_countries in
   let u_countries = let f x = (String.uppercase_ascii x.country_id) in List.map f countries in
   let repl_msg = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!" in
   let fog_of_war = j |> member "fog_of_war" |> to_string in
   let win = j|> member "win_message" |> to_string in
-  {players_list = (players p []) @ (ai p ai_p []); c_turn = "1"; turns = order (p+ai_p) p ai_p; turn = 0; c_phase = SetUp;
+  {players_list = (players p []) @ (aiE p eAI []) @ (aiM p mAI []) @ (aiH p hAI []);
+   c_turn = "1"; turns = order (p+eAI+mAI+hAI) p eAI mAI hAI; turn = 0; c_phase = SetUp;
    continents = continents; countries = countries; unclaimed = u_countries;
    card_l = init_cards (); attackDice = []; defendDice = [];
    fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
