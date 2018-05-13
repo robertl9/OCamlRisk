@@ -24,8 +24,10 @@ let rec updateTerm state =
 
 (* [play_game f] plays the game in adventure file [f]. *)
 let play_game p ai =
-  let startState = (init_state (int_of_string p) (int_of_string ai) (Yojson.Basic.from_file "dummy.json")) in
-  draw startState
+  let w = GWindow.window ~title:"Risk" ~border_width:10 () in
+  let _ = w#connect#destroy ~callback:GMain.Main.quit in
+  let startState = (init_state (int_of_string p) (int_of_string ai) (Yojson.Basic.from_file "map.json")) in
+  draw w [] startState
   (* updateTerm startState *)
 
 (* [main ()] starts the REPL, which prompts for a game to play.
