@@ -2,27 +2,27 @@
 	"continents": [
 		{"id": "KingLands",
 		"countries": ["Casterly\nRock", "Dragon-\nstone", "Iron Islands", "Riverrun"],
-		"bonus": "0"},
+		"bonus": "4"},
 
 		{"id": "TheSouth",
 		"countries": ["Highgarden", "Dorne", "Storm's End"],
-		"bonus": "0"},
+		"bonus": "2"},
 
 		{"id": "FreedWorld",
 		"countries": ["Pentos", "Braavos", "Volantis", "Tyrosh", "Qohor"],
-		"bonus": "0"},
+		"bonus": "5"},
 
 		{"id": "TheWild",
 		"countries": ["Dothraki Sea", "Red Waste", "Unknown Lands", "Slaver Bay"],
-		"bonus": "0"},
+		"bonus": "3"},
 
 		{"id": "TheNorth",
 		"countries": ["Winterfell", "Vale", "Skagos"],
-		"bonus": "0"},
+		"bonus": "3"},
 
 		{"id": "WinterSea",
 		"countries": ["Winter"],
-		"bonus": "0"}
+		"bonus": "1"}
 	],
 	"countries": [
 		{"id": "Winterfell",
