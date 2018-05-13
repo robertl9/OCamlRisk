@@ -71,6 +71,8 @@ val get_country_content: country -> string
 
 val getPhase: state -> phase
 
+val getPhaseString: state -> string
+
 val get_continent_id: continent -> string
 
 val get_continents: player -> continent list
