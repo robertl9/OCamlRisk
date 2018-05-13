@@ -12,9 +12,9 @@ type player
 (* [card] is an abstract type representing a card in the game*)
 type card
 
-type t_phase
-
 type continent
+
+type t_phase = Deploy | Attack | Reinforce
 
 type phase = SetUp | Game of t_phase
 
@@ -74,6 +74,12 @@ val getPhase: state -> phase
 val get_continent_id: continent -> string
 
 val get_continents: player -> continent list
+
+val getCountryTroops: state -> (string * int) list
+
+val getAttackDice: state -> int list
+
+val getDefendDice: state -> int list
 
 (* [remove_card s c] returns a state that has a
  * a card list that does not contain c

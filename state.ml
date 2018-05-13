@@ -22,7 +22,7 @@ type t_phase = Deploy | Attack | Reinforce
 
 type phase = SetUp | Game of t_phase
 
-type die_roll = One|Two|Three|Four|Five|Six|None
+type die_roll = One | Two | Three | Four | Five | Six | None
 
 type player = {
   id: string;
@@ -47,6 +47,8 @@ type state = {
   countries: country list;
   mutable unclaimed: string list;
   mutable card_l: card array;
+  mutable attackDice: int list;
+  mutable defendDice: int list;
   fog_of_war: string;
   mutable repl_msg: string;
   w_msg: string;
@@ -55,6 +57,19 @@ type state = {
 (* num of initial amount of troops allowed on board
  * subject to change
 *)
+
+let getCountryTroops st =
+  let rec append pl l =
+    match pl with
+    | [] -> l
+    | h::t -> append t (h.countries_held@l) in
+  append st.players_list []
+
+let getAttackDice st =
+  st.attackDice
+
+let getDefendDice st =
+  st.defendDice
 
 let get_continent_id cont =
   cont.continent_id
@@ -146,7 +161,8 @@ let init_state p ai_p j =
   let win = j|> member "win_message" |> to_string in
   {players_list = (players p []) @ (ai p ai_p []); c_turn = "1"; turns = order (p+ai_p) p ai_p; turn = 0; c_phase = SetUp;
    continents = continents; countries = countries; unclaimed = u_countries;
-   card_l = init_cards (); fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
+   card_l = init_cards (); attackDice = []; defendDice = [];
+   fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
 
 let add_player id character st =
   let player = {id = id; character = character; deploy = 0; continents = [];
@@ -271,6 +287,8 @@ let attack c c2 st =
   let a_roll = if a_troops > 3 then roll 3 else
     if a_troops = 1 then failwith "Insufficient Troops" else roll (a_troops-1) in
   let d_roll = if d_troops >= 2 then roll 2 else roll d_troops in
+  let _ = st.attackDice <- Array.to_list a_roll in
+  let _ = st.defendDice <- Array.to_list d_roll in
   match a_roll, d_roll with
   | [|x|], [|x2|] -> if x > x2
     then if d_troops = 1
@@ -407,6 +425,8 @@ let print_state st =
 
 (*changes the game state based on the GUI input*)
 let do' cmd st =
+  let _ = st.attackDice <- [] in
+  let _ = st.defendDice <- [] in
   match st.c_phase with
   | SetUp -> (match cmd with
       | ClaimC (c) when st.unclaimed != [] -> let st2 = pick_country (String.uppercase_ascii c) st in
