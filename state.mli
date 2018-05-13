@@ -49,6 +49,20 @@ val win: state -> bool
 (* [cards_owned p] returns a list of strings representing cards owned by p*)
 val cards_owned: player -> card list
 
+val get_unclaimed: state -> string list
+
+val get_neighbors: country -> string list
+
+val get_num_deploy: player -> int
+
+val get_player_countries: player -> (string * int) list
+
+val get_country_id: country -> string
+
+val get_player_list: state -> player list
+
+val get_country_content: country -> string
+
 (* [remove_card s c] returns a state that has a
  * a card list that does not contain c
 *)
@@ -71,3 +85,5 @@ val do': Command.command -> state -> state
 val get_msg: state -> string
 
 val init_state: int -> int -> Yojson.Basic.json -> state
+
+val get_country:string -> state -> country

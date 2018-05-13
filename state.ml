@@ -51,6 +51,28 @@ type state = {
 (* num of initial amount of troops allowed on board
  * subject to change
 *)
+
+let get_country_content ct =
+  ct.c_id
+
+let get_player_list st =
+  st.players_list
+
+let get_country_id ct =
+  ct.country_id
+
+let get_num_deploy pl =
+  pl.deploy
+
+let get_player_countries pl =
+  pl.countries_held
+
+let get_neighbors ct =
+  ct.neighbors
+
+let get_unclaimed st =
+  st.unclaimed
+
 let init_troops = 30
 
 let get_msg st =
