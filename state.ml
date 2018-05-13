@@ -237,18 +237,22 @@ let inc_troop n c st =
   let player, pl = get_player st.c_turn st.players_list [] in
   let rec inc c cl =
     match cl with
-    | [] -> failwith "Invalid Country"
-    | (k,v)::t -> if k = c then (k,v+n)::t else inc c t
-  in let _ = player.countries_held <- (inc c player.countries_held) in
-  let _ = st.repl_msg <- c ^ " has gained " ^ (string_of_int n) ^ " troop!" in
+    | [] -> []
+    | (k,v)::t -> if k = c then (k,v+n)::t else (k,v)::(inc c t)
+  in let _ =
+    if List.mem_assoc c player.countries_held
+    then
+      let _ = player.countries_held <- (inc c player.countries_held) in
+      st.repl_msg <- c ^ " has gained" ^ (string_of_int n) ^ " troop!"
+    else st.repl_msg <- st.c_turn ^ " does not own this country!" in
   let _ = st.players_list <- (player::pl) in st
 
 let dec_troop n c st =
   let player, pl = get_player st.c_turn st.players_list [] in
   let rec dec c cl =
     match cl with
-    | [] -> failwith "Invalid Country"
-    | (k,v)::t -> if k = c then (k,v-n)::t else dec c t
+    | [] -> []
+    | (k,v)::t -> if k = c then (k,v-n)::t else (k,v)::(dec c t)
   in let _ = player.countries_held <- (dec c player.countries_held) in
   let _ = st.repl_msg <- c ^ " has lost" ^ (string_of_int n) ^ " troop!" in
   let _ = st.players_list <- (player::pl) in st
@@ -273,6 +277,7 @@ let rec max2_e l =
 
 let conquer a d pl c t st =
   let f (k,v) = k <> c in
+  (* decrement country from attacker by t *)
   let _ = a.countries_held <- ((c,t)::a.countries_held) in
   let _ = d.countries_held <- List.filter f d.countries_held in
   let pc = List.map (fun (k,v) -> k) a.countries_held in
@@ -295,19 +300,25 @@ let attack c c2 st =
   match a_roll, d_roll with
   | [|x|], [|x2|] -> if x > x2
     then if d_troops = 1
-      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      then
+        let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+        dec_troop (Array.length a_roll) c st'
       else dec_troop 1 c2 st (* Decrement Defense Troop *)
     else dec_troop 1 c st (* Decerement Attack Troop *)
   | [|x; x'|], [|x2|] -> let max_x = max_e [x;x'] in
     if max_x > x2
     then if d_troops = 1
-      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      then
+        let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+        dec_troop (Array.length a_roll) c st'
       else dec_troop 1 c2 st (* Decrement Defense Troop *)
     else dec_troop 1 c st (* Decerement Attack Troop *)
   | [|x; x'; x''|], [|x2|] -> let max_x = max_e [x;x';x''] in
     if max_x > x2
     then if d_troops = 1
-      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      then
+        let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+        dec_troop (Array.length a_roll) c st'
       else dec_troop 1 c2 st (* Decrement Defense Troop *)
     else dec_troop 1 c st (* Decerement Attack Troop *)
   | [|x|], [|x2; x2'|] -> let max_x = max_e [x2;x2'] in
@@ -321,7 +332,9 @@ let attack c c2 st =
     let max2_x2 = max2_e [|x2;x2'|] in
     if max_x > max_x2 && max2_x > max2_x2
     then if d_troops = 2
-      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      then
+        let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+        dec_troop (Array.length a_roll) c st'
       else dec_troop 2 c2 st (* Decrement Defense Troop *)
     else if max_x > max_x2 || max2_x > max2_x2
     then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
@@ -333,7 +346,9 @@ let attack c c2 st =
     let max2_x2 = max2_e [|x2;x2'|] in
     if max_x > max_x2 && max2_x > max2_x2
     then if d_troops = 2
-      then conquer attacker defender pl c2 (Array.length a_roll) st (* Conquer *)
+      then
+        let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+        dec_troop (Array.length a_roll) c st'
       else dec_troop 2 c2 st (* Decrement Defense Troop *)
     else if max_x > max_x2 || max2_x > max2_x2
     then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
@@ -344,8 +359,8 @@ let attack c c2 st =
 
 let rec to_country s cl =
   match cl with
-  | [] -> failwith "Invalid Country!"
-  | h::t -> if h.country_id = s then h else to_country s t
+  | [] -> failwith (s^" is a Invalid Country!")
+  | h::t -> if String.uppercase_ascii h.country_id = String.uppercase_ascii s then h else to_country s t
 
 let rec reinforcable current_c dest neighbors cl visited st =
   match neighbors with
@@ -353,7 +368,7 @@ let rec reinforcable current_c dest neighbors cl visited st =
   | h::t ->
     if List.mem h visited = false && List.mem h cl
     then
-      if h.country_id = dest
+      if String.uppercase_ascii h.country_id = dest
       then true
       else
         let to_c = fun x -> to_country x st.countries in
@@ -368,8 +383,8 @@ let reinforce n c1 c2 st =
   let c2b = List.mem c2 cl in
   let rec suff l =
     match l with
-    | [] -> false
-    | (k,v)::t -> if k = c1 then n < v else suff t in
+    | [] -> true
+    | (k,v)::t -> if k = c1 then n >= v else suff t in
   let suffb = suff player.countries_held in
   if c1b && c2b then
     if suffb then let _ = st.repl_msg <- "Insufficent troops!" in st
@@ -394,6 +409,14 @@ let quit_helper st =
 
 let getPhase st =
   st.c_phase
+
+let getPhaseString st =
+  match st.c_phase with
+    | SetUp -> "SetUp!"
+    | Game x -> match x with
+      | Deploy -> "Deploy!"
+      | Attack -> "Attack!"
+      | Reinforce -> "Reinforce!"
 
 let rec string_of_dict d s =
   match d with
@@ -432,14 +455,20 @@ let do' cmd st =
   let _ = st.defendDice <- [] in
   match st.c_phase with
   | SetUp -> (match cmd with
-      | ClaimC (c) when st.unclaimed != [] -> let st2 = pick_country (String.uppercase_ascii c) st in
-        let _ = if st2.turn = (Array.length st2.turns)*4 then st2.c_phase <- Game (Deploy) else st2.c_phase <- st2.c_phase in st2
+      | ClaimC (c) when st.unclaimed != [] -> let st' = pick_country (String.uppercase_ascii c) st in
+        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
+      | ClaimC (c) when st.unclaimed = [] ->
+        let st' = inc_troop 1 (String.uppercase_ascii c) st in
+        let _ =
+          if st'.repl_msg = st.c_turn ^ " does not own this country!"
+          then ()
+          else
+            let _ = st'.turn <- st'.turn + 1 in
+            let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in () in
+        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | DeployC (n,c) when n == 1 ->
         let st' = inc_troop 1 (String.uppercase_ascii c) st in
-        let _ = st'.turn <- st'.turn + 1 in
-        let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in
-        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in
-        let _ = st'.repl_msg <- (String.uppercase_ascii c) ^ " has gained one troop!" in st'
+        let _ = if st'.turn = (Array.length st'.turns)*4 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
   | Game x -> (match x with
       | Deploy -> (match cmd with
@@ -474,7 +503,8 @@ let do' cmd st =
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Attack -> (match cmd with
           | AttackC (c1, c2) -> attack (String.uppercase_ascii c1) (String.uppercase_ascii c2) st
-          | EndPhaseC -> let _  = st.c_phase <- Game (Reinforce) in st
+          | EndPhaseC -> let _  = st.c_phase <- Game (Reinforce) in
+            let _ = st.repl_msg <- "EndPhase now reinforce" in st
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Reinforce -> (match cmd with
           | ReinforceC (n, c1, c2) ->
@@ -485,7 +515,8 @@ let do' cmd st =
           | EndPhaseC ->
             let _ = st.turn <- st.turn + 1 in
             let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
-            let _  = st.c_phase <- Game (Reinforce) in st
+            let _  = st.c_phase <- Game (Deploy) in
+            let _ = st.repl_msg <- "EndPhase now deploy" in st
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st))
 
 let taken_by state plyr =
