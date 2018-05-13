@@ -125,11 +125,11 @@ let rec smart_attack st =
 
   let defend_sort_helper def attacker=
     (*higher, bigger pos difference between attacking and defending country*)
-    let troop_diff_factor = (List.assoc get_country_id attacker !troop_ctry_lst)
-      - (List.assoc get_country_id def !troop_ctry_lst) in
-    let cont_factor = if (get_country_content def) = attacker.c_id
+    let troop_diff_factor = (List.assoc (get_country_id attacker) !troop_ctry_lst)
+                            - (List.assoc (get_country_id def) !troop_ctry_lst) in
+    let cont_factor = if (get_country_content def) = (get_country_content attacker)
       (*factor in number of other countries owned in def's continent*)
-      then let addit_ctrys = List.length (List.filter (fun x -> x = def.c_id)
+      then let addit_ctrys = List.length (List.filter (fun x -> x = (get_country_content def))
         (List.map (fun x -> fst x) (get_player_countries player))) in
       2 * troop_diff_factor + addit_ctrys else 0 in
     troop_diff_factor + cont_factor in
@@ -146,10 +146,10 @@ let rec smart_attack st =
     (*most optimum country to attack for each attacker*)
     let def = List.hd (List.sort defend_sort lst) in
     let troop_diff_factor = (List.assoc (get_country_id att) !troop_ctry_lst)
-      - (List.assoc get_country_id def !troop_ctry_lst) in
+      - (List.assoc (get_country_id def) !troop_ctry_lst) in
     let cont_factor = if get_country_content def = get_country_content att
       (*factor in number of other countries owned in def's continent*)
-      then let addit_ctrys = List.length (List.filter (fun x -> x = def.c_id)
+      then let addit_ctrys = List.length (List.filter (fun x -> x = (get_country_content def))
         (List.map (fun x -> fst x) (get_player_countries player))) in
       2 * troop_diff_factor + addit_ctrys else 0 in
     troop_diff_factor + cont_factor in
@@ -189,8 +189,8 @@ let rec smart_attack st =
   let att_def_tup = get_attack tuple_lst in
   let attacker = fst att_def_tup in
   let defender = snd att_def_tup in
-  let troop_diff = (snd (List.find (fun x -> (fst x) = attacker.country_id) !troop_ctry_lst)) -
-    (snd (List.find (fun x -> (fst x) = defender.country_id) !troop_ctry_lst)) in
+  let troop_diff = (snd (List.find (fun x -> (fst x) = (get_country_id attacker)) !troop_ctry_lst)) -
+    (snd (List.find (fun x -> (fst x) = (get_country_id defender)) !troop_ctry_lst)) in
 
   (* depending on troop_diff, choose whether or not to attack *)
   let new_st = if troop_diff > 1
