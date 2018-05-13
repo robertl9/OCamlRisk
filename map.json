@@ -1,7 +1,7 @@
 {
 	"continents": [
 		{"id": "KingLands",
-		"countries": ["Casterly\nRock", "Dragon-\nstone", "Iron Islands", "Riverrun"],
+		"countries": ["Casterly\nRock", "Dragon-\nstone", "Iron Islands", "Vale"],
 		"bonus": "4"},
 
 		{"id": "TheSouth",
@@ -17,7 +17,7 @@
 		"bonus": "3"},
 
 		{"id": "TheNorth",
-		"countries": ["Winterfell", "Vale", "Skagos"],
+		"countries": ["Winterfell", "Riverrun", "Skagos"],
 		"bonus": "3"},
 
 		{"id": "WinterSea",
@@ -26,7 +26,7 @@
 	],
 	"countries": [
 		{"id": "Winterfell",
-		"neighbors": ["Iron Islands", "Winter", "Skagos", "Vale"],
+		"neighbors": ["Iron Islands", "Winter", "Skagos", "Riverrun"],
 		"continent": "TheNorth"},
 
 		{"id": "Skagos",
@@ -38,27 +38,27 @@
 		"continent": "KingLands"},
 
 		{"id": "Casterly\nRock",
-		"neighbors": ["Iron Islands", "HighGarden", "Riverrun"],
+		"neighbors": ["Iron Islands", "Vale", "Storm's End"],
 		"continent": "KingLands"},
 
 		{"id": "Vale",
-		"neighbors": ["Winterfell", "Skagos", "Riverrun", "Iron Islands", "Braavos"],
-		"continent": "TheNorth"},
+		"neighbors": ["Riverrun", "Casterly\nRock", "Dragon-\nstone" , "Iron Islands", "Pentos"],
+		"continent": "KingLands"},
 
 		{"id": "Winter",
 		"neighbors": ["Winterfell"],
-		"continent": "Winter"},
+		"continent": "WinterSea"},
 
 		{"id": "Riverrun",
-		"neighbors": ["Casterly\nRock", "Vale", "Iron Islands", "Dragon-\nstone", "Pentos", "Storm's End"],
-		"continent": "KingLands"},
+		"neighbors": ["Winterfell", "Skagos", "Iron Islands", "Dragon-\nstone", "Braavos", "Vale"],
+		"continent": "TheNorth"},
 
 		{"id": "Storm's End",
-		"neighbors": ["Dragon-\nstone", "Highgarden", "Dorne", "Casterly\nRock", "Riverrun"],
+		"neighbors": ["Dragon-\nstone", "Highgarden", "Dorne", "Casterly\nRock", "Vale"],
 		"continent": "TheSouth"},
 
 		{"id": "Dragon-\nstone",
-		"neighbors": ["Storm's End", "Pentos", "Tyrosh", "Riverrun"],
+		"neighbors": ["Storm's End", "Pentos", "Tyrosh", "Vale"],
 		"continent": "KingLands"},
 
 		{"id": "Highgarden",
@@ -70,15 +70,15 @@
 		"continent": "TheSouth"},
 
 		{"id": "Braavos",
-		"neighbors": ["Vale", "Pentos", "Qohor"],
+		"neighbors": ["Riverrun", "Pentos", "Qohor"],
 		"continent": "FreedWorld"},
 
 		{"id": "Pentos",
-		"neighbors": ["Tyrosh", "Braavos", "Qohor", "Dragon-\nstone", "Storm's End"],
+		"neighbors": ["Tyrosh", "Braavos", "Qohor", "Dragon-\nstone", "Vale"],
 		"continent": "FreedWorld"},
 
 		{"id": "Tyrosh",
-		"neighbors": ["Volantis", "Dragon-\nstone", "Qohor"],
+		"neighbors": ["Pentos", "Volantis", "Dragon-\nstone", "Qohor"],
 		"continent": "FreedWorld"},
 
 		{"id": "Qohor",
@@ -90,7 +90,7 @@
 		"continent": "FreedWorld"},
 
 		{"id": "Dothraki Sea",
-		"neighbors": ["Qohor", "Volantis", "Slaver Bay", "Dothraki Sea", "Red Waste", "Unkown Lands"],
+		"neighbors": ["Qohor", "Volantis", "Slaver Bay", "Red Waste", "Unknown Lands"],
 		"continent": "TheWild"},
 
 		{"id": "Slaver Bay",
@@ -98,7 +98,7 @@
 		"continent": "TheWild"},
 
 		{"id": "Red Waste",
-		"neighbors": ["Dothraki Sea", "Slaver Bay", "Red Waste"],
+		"neighbors": ["Dothraki Sea", "Slaver Bay", "Unknown Lands"],
 		"continent": "TheWild"},
 
 		{"id": "Unknown Lands",
