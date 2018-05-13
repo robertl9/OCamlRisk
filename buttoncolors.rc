@@ -1,0 +1,169 @@
+style "green_button"
+{
+  bg[PRELIGHT] = { 0.0, 0.9, 0}
+  fg[PRELIGHT] = { 0.99, 0, 0.99 }
+  bg[ACTIVE] = { 0.0, 0.9, 0 }
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = { 0.0, 0.9, 0 }
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
+style "yellow_button"
+{
+  bg[PRELIGHT] = { 1.0, 1.0, 0}
+  fg[PRELIGHT] = { 0.99, 0, 0.99}
+  bg[ACTIVE] = { 1.0, 1.0, 0 }
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = { 1.0, 1.0, 0 }
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
+style "orange_button"
+{
+  bg[PRELIGHT] = { 0.913, 0.58, 0.027}
+  fg[PRELIGHT] = { 0.99, 0, 0.99}
+  bg[ACTIVE] = { 0.913, 0.58, 0.027}
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = { 0.913, 0.58, 0.027}
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
+style "red_button"
+{
+  bg[PRELIGHT] = { 0.878, 0.18, 0.18}
+  fg[PRELIGHT] = { 0.99, 0, 0.99}
+  bg[ACTIVE] = { 0.878, 0.18, 0.18 }
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = { 0.878, 0.18, 0.18 }
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
+style "blue_button"
+{
+  bg[PRELIGHT] = { 0.294, 0.611, 0.945}
+  fg[PRELIGHT] = { 0.99, 0, 0.99}
+  bg[ACTIVE] = { 0.294, 0.611, 0.945}
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = { 0.294, 0.611, 0.945}
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
+style "highlight_turn"
+{
+  bg[PRELIGHT] = { 0.392, 0.674, 0.99}
+  fg[PRELIGHT] = { 0.99, 0, 0.99}
+  bg[ACTIVE] = { 0.392, 0.674, 0.99}
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = { 0.392, 0.674, 0.99}
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
+widget "*winterG" style "green_button"
+widget "*winterfellG" style "green_button"
+widget "*riverrunG" style "green_button"
+widget "*valeG" style "green_button"
+widget "*casterlyG" style "green_button"
+widget "*dragonstoneG" style "green_button"
+widget "*stormG" style "green_button"
+widget "*dorneG" style "green_button"
+widget "*pentosG" style "green_button"
+widget "*braavosG" style "green_button"
+widget "*tyroshG" style "green_button"
+widget "*dothrakiG" style "green_button"
+widget "*volantisG" style "green_button"
+widget "*slaverG" style "green_button"
+widget "*unknownG" style "green_button"
+widget "*redwasteG" style "green_button"
+widget "*skagosG" style "green_button"
+widget "*ironislandsG" style "green_button"
+widget "*highgardenG" style "green_button"
+widget "*qohorG" style "green_button"
+
+widget "*winterY" style "yellow_button"
+widget "*winterfellY" style "yellow_button"
+widget "*riverrunY" style "yellow_button"
+widget "*valeY" style "yellow_button"
+widget "*casterlyY" style "yellow_button"
+widget "*dragonstoneY" style "yellow_button"
+widget "*stormY" style "yellow_button"
+widget "*dorneY" style "yellow_button"
+widget "*pentosY" style "yellow_button"
+widget "*braavosY" style "yellow_button"
+widget "*tyroshY" style "yellow_button"
+widget "*dothrakiY" style "yellow_button"
+widget "*volantisY" style "yellow_button"
+widget "*slaverY" style "yellow_button"
+widget "*unknownY" style "yellow_button"
+widget "*redwasteY" style "yellow_button"
+widget "*skagosY" style "yellow_button"
+widget "*ironislandsY" style "yellow_button"
+widget "*highgardenY" style "yellow_button"
+widget "*qohorY" style "yellow_button"
+
+widget "*winterO" style "orange_button"
+widget "*winterfellO" style "orange_button"
+widget "*riverrunO" style "orange_button"
+widget "*valeO" style "orange_button"
+widget "*casterlyO" style "orange_button"
+widget "*dragonstoneO" style "orange_button"
+widget "*stormO" style "orange_button"
+widget "*dorneO" style "orange_button"
+widget "*pentosO" style "orange_button"
+widget "*braavosO" style "orange_button"
+widget "*tyroshO" style "orange_button"
+widget "*dothrakiO" style "orange_button"
+widget "*volantisO" style "orange_button"
+widget "*slaverO" style "orange_button"
+widget "*unknownO" style "orange_button"
+widget "*redwasteO" style "orange_button"
+widget "*skagosO" style "orange_button"
+widget "*ironislandsO" style "orange_button"
+widget "*highgardenO" style "orange_button"
+widget "*qohorO" style "orange_button"
+
+widget "*winterR" style "red_button"
+widget "*winterfellR" style "red_button"
+widget "*riverrunR" style "red_button"
+widget "*valeR" style "red_button"
+widget "*casterlyR" style "red_button"
+widget "*dragonstoneR" style "red_button"
+widget "*stormR" style "red_button"
+widget "*dorneR" style "red_button"
+widget "*pentosR" style "red_button"
+widget "*braavosR" style "red_button"
+widget "*tyroshR" style "red_button"
+widget "*dothrakiR" style "red_button"
+widget "*volantisR" style "red_button"
+widget "*slaverR" style "red_button"
+widget "*unknownR" style "red_button"
+widget "*redwasteR" style "red_button"
+widget "*skagosR" style "red_button"
+widget "*ironislandsR" style "red_button"
+widget "*highgardenR" style "red_button"
+widget "*qohorR" style "red_button"
+
+widget "*winterB" style "blue_button"
+widget "*winterfellB" style "blue_button"
+widget "*riverrunB" style "blue_button"
+widget "*valeB" style "blue_button"
+widget "*casterlyB" style "blue_button"
+widget "*dragonstoneB" style "blue_button"
+widget "*stormB" style "blue_button"
+widget "*dorneB" style "blue_button"
+widget "*pentosB" style "blue_button"
+widget "*braavosB" style "blue_button"
+widget "*tyroshB" style "blue_button"
+widget "*dothrakiB" style "blue_button"
+widget "*volantisB" style "blue_button"
+widget "*slaverB" style "blue_button"
+widget "*unknownB" style "blue_button"
+widget "*redwasteB" style "blue_button"
+widget "*skagosB" style "blue_button"
+widget "*ironislandsB" style "blue_button"
+widget "*highgardenB" style "blue_button"
+widget "*qohorB" style "blue_button"
+
+widget "*setupsetup" style "highlight_turn"
+widget "*deploydeploy" style "highlight_turn"
+widget "*attackattack" style "highlight_turn"
+widget "*reinforcereinforce" style "highlight_turn"
