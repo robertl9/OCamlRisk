@@ -215,9 +215,10 @@ let get_country str_country state =
   List.find (fun x -> x.country_id = str_country) state.countries
 
 let rec get_defender c pl npl =
-  let f x (k,v) = if c = k then true else x || false in
+  let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then true else x || false in
   match pl with
   | [] -> failwith "Invalid Country"
+  | h::[] -> h, npl
   | h::t -> let boolean = List.fold_left f false h.countries_held in
     if boolean then h, t@npl else get_defender c t (h::npl)
 
@@ -298,87 +299,88 @@ let rec mem c l =
   | h::t -> if String.uppercase_ascii h = c then false else mem c t
 
 let attack c c2 st =
-  let attacker, pl = get_player st.c_turn st.players_list [] in
-  let defender, pl = get_defender c2 pl [] in
-  let to_c = fun x -> to_country x st.countries in
-  let country1 = to_c c in
-  let neighbors = country1.neighbors in
-  let borderBool = mem c neighbors in
-  let a_troops = get_troops c attacker in
-  let d_troops = get_troops c2 defender in
-  let a_roll = if a_troops > 3 then roll 3 else
-    if a_troops = 1 then [||] else roll (a_troops-1) in
-  let d_roll = if d_troops >= 2 then roll 2 else roll d_troops in
-  if a_roll = [||] || attacker.id = defender.id || borderBool
-  then
-    if a_roll = [||]
-    then let _ = st.repl_msg <- "Insufficient Troops!" in st
-    else
-      if attacker.id = defender.id
-      then let _ = st.repl_msg <- "Player owns both countries!" in st
-      else let _ = st.repl_msg <- "Countries do not border each other!" in st
+  let attacker, pl = get_defender c st.players_list [] in
+  if attacker.id <> st.c_turn
+  then let _ = st.repl_msg <- "Player must own attacking country!" in st
   else
-    let _ = st.attackDice <- Array.to_list a_roll in
-    let _ = st.defendDice <- Array.to_list d_roll in
-    match a_roll, d_roll with
-    | [|x|], [|x2|] -> if x > x2
-      then if d_troops = 1
-        then
-          let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-          dec_troop (Array.length a_roll) c st'
-        else dec_troop 1 c2 st (* Decrement Defense Troop *)
-      else dec_troop 1 c st (* Decerement Attack Troop *)
-    | [|x; x'|], [|x2|] -> let max_x = max_e [x;x'] in
-      if max_x > x2
-      then if d_troops = 1
-        then
-          let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-          dec_troop (Array.length a_roll) c st'
-        else dec_troop 1 c2 st (* Decrement Defense Troop *)
-      else dec_troop 1 c st (* Decerement Attack Troop *)
-    | [|x; x'; x''|], [|x2|] -> let max_x = max_e [x;x';x''] in
-      if max_x > x2
-      then if d_troops = 1
-        then
-          let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-          dec_troop (Array.length a_roll) c st'
-        else dec_troop 1 c2 st (* Decrement Defense Troop *)
-      else dec_troop 1 c st (* Decerement Attack Troop *)
-    | [|x|], [|x2; x2'|] -> let max_x = max_e [x2;x2'] in
-      if x > max_x
-      then dec_troop 1 c2 st (* Decrement Defense Troop *)
-      else dec_troop 1 c st (* Decerement Attack Troop *)
-    | [|x; x'|], [|x2; x2'|] ->
-      let max_x = max_e [x;x'] in
-      let max_x2 = max_e [x2;x2'] in
-      let max2_x = max2_e [|x;x'|] in
-      let max2_x2 = max2_e [|x2;x2'|] in
-      if max_x > max_x2 && max2_x > max2_x2
-      then if d_troops = 2
-        then
-          let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-          dec_troop (Array.length a_roll) c st'
-        else dec_troop 2 c2 st (* Decrement Defense Troop *)
-      else if max_x > max_x2 || max2_x > max2_x2
-      then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
-      else dec_troop 2 c st (* Decerement Attack Troop *)
-    | [|x; x'; x''|], [|x2; x2'|] ->
-      let max_x = max_e [x;x'] in
-      let max_x2 = max_e [x2;x2'] in
-      let max2_x = max2_e [|x;x'|] in
-      let max2_x2 = max2_e [|x2;x2'|] in
-      if max_x > max_x2 && max2_x > max2_x2
-      then if d_troops = 2
-        then
-          let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-          dec_troop (Array.length a_roll) c st'
-        else dec_troop 2 c2 st (* Decrement Defense Troop *)
-      else if max_x > max_x2 || max2_x > max2_x2
-      then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
-      else dec_troop 2 c st (* Decerement Attack Troop *)
-    | _, _ -> let _ = print_int (Array.length a_roll) in
-      let _ = print_int (Array.length d_roll) in
-      failwith "Program Failure"
+    let defender, pl = get_defender c2 pl [] in
+    let to_c = fun x -> to_country x st.countries in
+    let country1 = to_c c in
+    let neighbors = country1.neighbors in
+    let borderBool = mem c2 neighbors in
+    let a_troops = get_troops c attacker in
+    let d_troops = get_troops c2 defender in
+    let a_roll = if a_troops > 3 then roll 3 else
+      if a_troops = 1 then [||] else roll (a_troops-1) in
+    let d_roll = if d_troops >= 2 then roll 2 else roll d_troops in
+    if a_roll = [||] || attacker.id = defender.id || borderBool
+    then
+      if a_roll = [||]
+      then let _ = st.repl_msg <- "Insufficient Troops!" in st
+      else
+        if attacker.id = defender.id
+        then let _ = st.repl_msg <- "Player owns both countries!" in st
+        else let _ = st.repl_msg <- "Countries do not border each other!" in st
+    else
+      let _ = st.attackDice <- Array.to_list a_roll in
+      let _ = st.defendDice <- Array.to_list d_roll in
+      match a_roll, d_roll with
+      | [|x|], [|x2|] -> if x > x2
+        then if d_troops = 1
+          then
+            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+            dec_troop (Array.length a_roll) c st'
+          else dec_troop 1 c2 st (* Decrement Defense Troop *)
+        else dec_troop 1 c st (* Decerement Attack Troop *)
+      | [|x; x'|], [|x2|] -> let max_x = max_e [x;x'] in
+        if max_x > x2
+        then if d_troops = 1
+          then
+            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+            dec_troop (Array.length a_roll) c st'
+          else dec_troop 1 c2 st (* Decrement Defense Troop *)
+        else dec_troop 1 c st (* Decerement Attack Troop *)
+      | [|x; x'; x''|], [|x2|] -> let max_x = max_e [x;x';x''] in
+        if max_x > x2
+        then if d_troops = 1
+          then
+            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+            dec_troop (Array.length a_roll) c st'
+          else dec_troop 1 c2 st (* Decrement Defense Troop *)
+        else dec_troop 1 c st (* Decerement Attack Troop *)
+      | [|x|], [|x2; x2'|] -> let max_x = max_e [x2;x2'] in
+        if x > max_x
+        then dec_troop 1 c2 st (* Decrement Defense Troop *)
+        else dec_troop 1 c st (* Decerement Attack Troop *)
+      | [|x; x'|], [|x2; x2'|] ->
+        let max_x = max_e [x;x'] in
+        let max_x2 = max_e [x2;x2'] in
+        let max2_x = max2_e [|x;x'|] in
+        let max2_x2 = max2_e [|x2;x2'|] in
+        if max_x > max_x2 && max2_x > max2_x2
+        then if d_troops = 2
+          then
+            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+            dec_troop (Array.length a_roll) c st'
+          else dec_troop 2 c2 st (* Decrement Defense Troop *)
+        else if max_x > max_x2 || max2_x > max2_x2
+        then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
+        else dec_troop 2 c st (* Decerement Attack Troop *)
+      | [|x; x'; x''|], [|x2; x2'|] ->
+        let max_x = max_e [x;x'] in
+        let max_x2 = max_e [x2;x2'] in
+        let max2_x = max2_e [|x;x'|] in
+        let max2_x2 = max2_e [|x2;x2'|] in
+        if max_x > max_x2 && max2_x > max2_x2
+        then if d_troops = 2
+          then
+            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
+            dec_troop (Array.length a_roll) c st'
+          else dec_troop 2 c2 st (* Decrement Defense Troop *)
+        else if max_x > max_x2 || max2_x > max2_x2
+        then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
+        else dec_troop 2 c st (* Decerement Attack Troop *)
+      | _, _ -> let _ = st.repl_msg <- "Invalid Rolls" in st
 
 let rec reinforcable current_c dest neighbors cl visited st =
   match neighbors with
@@ -491,33 +493,34 @@ let do' cmd st =
   | Game x -> (match x with
       | Deploy -> (match cmd with
           | DeployC (n,c) ->
-            (let player, pl = get_player st.c_turn st.players_list [] in
-             if player.deploy = 0 then
+            (let player, pl = get_defender (String.uppercase_ascii c) st.players_list [] in
+             if player.deploy = 0
+             then
                let troops = (if ((List.length player.countries_held)/3 <= 3)
                              then 3
                              else (List.length player.countries_held)/3) +
                             List.fold_left (fun x y -> x + y.bonus_troops) 0 player.continents in
                let _ = player.deploy <- troops in
                let _ = st.players_list <- (player::pl) in
-               if n <= player.deploy then
+               if n <= player.deploy && player.id = st.c_turn then
                  let _ = player.deploy <- player.deploy-n in
                  let _ = if player.deploy = 0
                    then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
                    else st.c_phase <- Game (Deploy) in
                  let _ = st.players_list <- (player::pl) in
-                 let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
-                 let st' = inc_troop n (String.uppercase_ascii c) st in st'
+                 let st' = inc_troop n (String.uppercase_ascii c) st in
+                 let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st'
                else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st
              else
-             if n <= player.deploy then
-               let _ = player.deploy <- player.deploy-n in
-               let _ = if player.deploy = 0
-                 then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
-                 else st.c_phase <- Game (Deploy) in
-               let _ = st.players_list <- (player::pl) in
-               let _ = st.repl_msg <- (String.uppercase_ascii c) ^ " has gained " ^ string_of_int n ^ " troop!" in
-               let st' = inc_troop n (String.uppercase_ascii c) st in st'
-             else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st)
+               if n <= player.deploy && player.id = st.c_turn then
+                 let _ = player.deploy <- player.deploy-n in
+                 let _ = if player.deploy = 0
+                   then (st.c_phase <- Game (Attack); st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)))
+                   else st.c_phase <- Game (Deploy) in
+                 let _ = st.players_list <- (player::pl) in
+                 let st' = inc_troop n (String.uppercase_ascii c) st in
+                 let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st'
+               else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st)
           (* | TradeC ->
             let player, pl = get_player st.c_turn st.players_list [] in *)
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
