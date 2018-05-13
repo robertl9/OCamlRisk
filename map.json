@@ -1,0 +1,110 @@
+{
+	"continents": [
+		{"id": "KingLands",
+		"countries": ["Casterly\nRock", "Dragon-\nstone", "Iron Islands", "Riverrun"],
+		"bonus": "0"},
+
+		{"id": "TheSouth",
+		"countries": ["Highgarden", "Dorne", "Storm's End"],
+		"bonus": "0"},
+
+		{"id": "FreedWorld",
+		"countries": ["Pentos", "Braavos", "Volantis", "Tyrosh", "Qohor"],
+		"bonus": "0"},
+
+		{"id": "TheWild",
+		"countries": ["Dothraki Sea", "Red Waste", "Unknown Lands", "Slaver Bay"],
+		"bonus": "0"},
+
+		{"id": "TheNorth",
+		"countries": ["Winterfell", "Vale", "Skagos"],
+		"bonus": "0"},
+
+		{"id": "WinterSea",
+		"countries": ["Winter"],
+		"bonus": "0"}
+	],
+	"countries": [
+		{"id": "Winterfell",
+		"neighbors": ["Iron Islands", "Winter", "Skagos", "Vale"],
+		"continent": "TheNorth"},
+
+		{"id": "Skagos",
+		"neighbors": ["Winterfell", "Riverrun"],
+		"continent": "TheNorth"},
+
+		{"id": "Iron Islands",
+		"neighbors": ["Winterfell", "Riverrun", "Casterly\nRock", "Vale"],
+		"continent": "KingLands"},
+
+		{"id": "Casterly\nRock",
+		"neighbors": ["Iron Islands", "HighGarden", "Riverrun"],
+		"continent": "KingLands"},
+
+		{"id": "Vale",
+		"neighbors": ["Winterfell", "Skagos", "Riverrun", "Iron Islands", "Braavos"],
+		"continent": "TheNorth"},
+
+		{"id": "Winter",
+		"neighbors": ["Winterfell"],
+		"continent": "Winter"},
+
+		{"id": "Riverrun",
+		"neighbors": ["Casterly\nRock", "Vale", "Iron Islands", "Dragon-\nstone", "Pentos", "Storm's End"],
+		"continent": "KingLands"},
+
+		{"id": "Storm's End",
+		"neighbors": ["Dragon-\nstone", "Highgarden", "Dorne", "Casterly\nRock", "Riverrun"],
+		"continent": "TheSouth"},
+
+		{"id": "Dragon-\nstone",
+		"neighbors": ["Storm's End", "Pentos", "Tyrosh", "Riverrun"],
+		"continent": "KingLands"},
+
+		{"id": "Highgarden",
+		"neighbors": ["Storm's End", "Dorne"],
+		"continent": "TheSouth"},
+
+		{"id": "Dorne",
+		"neighbors": ["Storm's End", "Highgarden"],
+		"continent": "TheSouth"},
+
+		{"id": "Braavos",
+		"neighbors": ["Vale", "Pentos", "Qohor"],
+		"continent": "FreedWorld"},
+
+		{"id": "Pentos",
+		"neighbors": ["Tyrosh", "Braavos", "Qohor", "Dragon-\nstone", "Storm's End"],
+		"continent": "FreedWorld"},
+
+		{"id": "Tyrosh",
+		"neighbors": ["Volantis", "Dragon-\nstone", "Qohor"],
+		"continent": "FreedWorld"},
+
+		{"id": "Qohor",
+		"neighbors": ["Pentos", "Tyrosh", "Braavos", "Dothraki Sea", "Volantis"],
+		"continent": "FreedWorld"},
+
+		{"id": "Volantis",
+		"neighbors": ["Qohor", "Tyrosh", "Slaver Bay", "Dothraki Sea"],
+		"continent": "FreedWorld"},
+
+		{"id": "Dothraki Sea",
+		"neighbors": ["Qohor", "Volantis", "Slaver Bay", "Dothraki Sea", "Red Waste", "Unkown Lands"],
+		"continent": "TheWild"},
+
+		{"id": "Slaver Bay",
+		"neighbors": ["Dothraki Sea", "Volantis", "Red Waste"],
+		"continent": "TheWild"},
+
+		{"id": "Red Waste",
+		"neighbors": ["Dothraki Sea", "Slaver Bay", "Red Waste"],
+		"continent": "TheWild"},
+
+		{"id": "Unknown Lands",
+		"neighbors": ["Dothraki Sea", "Red Waste"],
+		"continent": "TheWild"}
+		],
+	"fog_of_war": "false",
+	"win_message": "Congratulations! You have conquered the world!"
+	}
