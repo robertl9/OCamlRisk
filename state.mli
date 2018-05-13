@@ -12,6 +12,10 @@ type player
 (* [card] is an abstract type representing a card in the game*)
 type card
 
+type phase
+
+type t_phase
+
 (* [taken s p] returns a list representing the countries in s
  * that are held by a player p
 *)
@@ -62,6 +66,8 @@ val get_country_id: country -> string
 val get_player_list: state -> player list
 
 val get_country_content: country -> string
+
+val getPhase: state -> phase
 
 (* [remove_card s c] returns a state that has a
  * a card list that does not contain c

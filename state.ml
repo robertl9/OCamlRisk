@@ -364,6 +364,9 @@ let quit_helper st =
   let _ = st.players_list <- List.filter (fun x -> x != player) st.players_list
   in st
 
+let getPhase st =
+  st.c_phase
+
 let rec string_of_dict d s =
   match d with
   | [] -> s
