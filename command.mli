@@ -5,9 +5,7 @@
  * troops on that location.
 *)
 
-type card = BannerMan | Lord | Dragon | WildCard
-
-type actions = | DeployC of int * string | Trade of card * card * card |
+type actions = | DeployC of int * string | TradeC of string * string * string |
                  ReinforceC of int * string * string
                | AttackC of string * string | QuitC | AllyC of string
                | ErrorC of string | ClaimC of string | EndPhaseC
