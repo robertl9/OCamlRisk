@@ -398,24 +398,24 @@ let attack c c2 st =
       | [|x|], [|x2|] -> if x > x2
         then if d_troops = 1
           then
-            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-            dec_troop (Array.length a_roll) c st'
+            let st' = conquer attacker defender pl c2 (a_troops - 1) st in (* Conquer *)
+            dec_troop (a_troops - 1) c st'
           else dec_troop 1 c2 st (* Decrement Defense Troop *)
         else dec_troop 1 c st (* Decerement Attack Troop *)
       | [|x; x'|], [|x2|] -> let max_x = max_e [x;x'] in
         if max_x > x2
         then if d_troops = 1
           then
-            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-            dec_troop (Array.length a_roll) c st'
+            let st' = conquer attacker defender pl c2 (a_troops - 1) st in (* Conquer *)
+            dec_troop (a_troops - 1) c st'
           else dec_troop 1 c2 st (* Decrement Defense Troop *)
         else dec_troop 1 c st (* Decerement Attack Troop *)
       | [|x; x'; x''|], [|x2|] -> let max_x = max_e [x;x';x''] in
         if max_x > x2
         then if d_troops = 1
           then
-            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-            dec_troop (Array.length a_roll) c st'
+            let st' = conquer attacker defender pl c2 (a_troops - 1) st in (* Conquer *)
+            dec_troop (a_troops - 1) c st'
           else dec_troop 1 c2 st (* Decrement Defense Troop *)
         else dec_troop 1 c st (* Decerement Attack Troop *)
       | [|x|], [|x2; x2'|] -> let max_x = max_e [x2;x2'] in
@@ -430,8 +430,8 @@ let attack c c2 st =
         if max_x > max_x2 && max2_x > max2_x2
         then if d_troops = 2
           then
-            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-            dec_troop 2 c st'
+            let st' = conquer attacker defender pl c2 (a_troops - 1) st in (* Conquer *)
+            dec_troop (a_troops - 1) c st'
           else dec_troop 2 c2 st (* Decrement Defense Troop *)
         else
         if max_x2 >= max_x && max2_x2 >= max2_x
@@ -445,8 +445,8 @@ let attack c c2 st =
         if max_x > max_x2 && max2_x > max2_x2
         then if d_troops = 2
           then
-            let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-            dec_troop 3 c st'
+            let st' = conquer attacker defender pl c2 (a_troops - 1) st in (* Conquer *)
+            dec_troop (a_troops - 1) c st'
           else dec_troop 2 c2 st (* Decrement Defense Troop *)
         else
           if max_x2 >= max_x && max2_x2 >= max2_x
@@ -643,7 +643,6 @@ let do' cmd st =
                  let st' = inc_troop n (String.uppercase_ascii c) st in
                  let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st'
                else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st)
-
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Attack -> (match cmd with
           | AttackC (c1, c2) -> attack (String.uppercase_ascii c1) (String.uppercase_ascii c2) st
