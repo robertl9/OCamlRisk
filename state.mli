@@ -115,3 +115,5 @@ val init_state: int -> int -> int -> int -> Yojson.Basic.json -> state
 val get_country:string -> state -> country
 
 val country_owned_by_player: state -> string -> string
+
+val get_win_msg: state -> string 
