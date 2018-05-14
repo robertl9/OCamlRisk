@@ -282,16 +282,31 @@ let dec_troop n c st =
     | [] -> []
     | (k,v)::t -> if k = c then (k,v-n)::t else (k,v)::(dec c t)
   in let _ = player.countries_held <- (dec c player.countries_held) in
-  let _ = st.repl_msg <- c ^ " has lost" ^ (string_of_int n) ^ " troop!" in
+  (* let _ = st.repl_msg <- c ^ " has lost" ^ (string_of_int n) ^ " troop!" in *)
   let _ = st.players_list <- (player::pl) in st
 
+let rec find_index a el index =
+  if Array.length a = 0 then failwith ("Impossible!")
+  else if el = a.(0) then index
+  else let new_array = Array.sub a 1 (Array.length a - 1) in
+    find_index new_array el (index+1)
+
+let remove_card arr elem =
+  let index = find_index arr elem 0 in
+  let arr1 = Array.sub arr 0 index in
+  let arr2 = Array.sub arr (index+1) (Array.length arr - 1 - index) in
+  Array.append arr1 arr2
+
 let draw_card st =
-  let len = Array.length st.card_l in
-  let c = st.card_l.(Random.int len) in
-  (* Remove Card *)
-  let player, pl = get_player st.c_turn st.players_list [] in
-  let _ = player.cards <- c::player.cards in
-  let _ = st.players_list <- (player::pl) in st
+  if Array.length st.card_l > 0 then
+    let len = Array.length st.card_l in
+    let c = st.card_l.(Random.int len) in
+    let _ = st.card_l <- remove_card st.card_l c in
+    (* Remove Card *)
+    let player, pl = get_player st.c_turn st.players_list [] in
+    let _ = player.cards <- c::player.cards in
+    let _ = st.players_list <- (player::pl) in st
+  else st
 
 let rec max_e l =
   match l with
@@ -309,16 +324,28 @@ let rec to_country s cl =
   | h::t -> if String.uppercase_ascii h.country_id = String.uppercase_ascii s then h else to_country s t
 
 let conquer a d pl c t st =
+  let _ = draw_card st in
   let f (k,v) = k <> c in
-  (* decrement country from attacker by t *)
   let _ = a.countries_held <- ((c,t)::a.countries_held) in
   let _ = d.countries_held <- List.filter f d.countries_held in
+  (* Remove player from Playing List *)
+
   let pc = List.map (fun (k,v) -> k) a.countries_held in
   let _ = a.continents <- conq_continent pc st.continents [] in
   let pc2 = List.map (fun (k,v) -> k) d.countries_held in
-  let _ = d.continents <- conq_continent pc2 st.continents [] in
-  let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "!" in
-  let _ = st.players_list <- (a::d::pl) in st
+  let _ = st.repl_msg <- string_of_int (List.length d.countries_held) in
+  (* print_int (List.length d.countries_held) ;  *)
+  if List.length d.countries_held = 0 then
+    let _ = a.cards <- a.cards @ d.cards in
+    let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "and "
+                           ^ a.id^" has defeated " ^ d.id ^ "!" in
+    print_string ("in loop") ;
+    let _ = st.turns <- remove_card st.turns d.id in
+    let _ = st.players_list <- (a::pl) in st
+  else
+    let _ = d.continents <- conq_continent pc2 st.continents [] in
+    let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "!" in
+    let _ = st.players_list <- (a::d::pl) in st
 
 let rec mem c l =
   match l with
