@@ -33,6 +33,8 @@ type player = {
   mutable cards: card list;
 }
 
+let troop_bonus_list= [4;6;8;10;12;15]
+
 let get_continents pl =
   pl.continents
 
@@ -51,6 +53,8 @@ type state = {
   mutable defendDice: int list;
   fog_of_war: string;
   mutable repl_msg: string;
+  mutable card_bonus_index: int;
+  mutable card_bonus: int;
   w_msg: string;
 }
 
@@ -107,6 +111,15 @@ let head_of_lst lst =
   match lst with
   | [] -> []
   | h::t -> h
+
+let get_player_of_state s =
+  let player_id = s.c_turn in
+  let rec helper plyrs =
+    match plyrs with
+    | [] -> failwith ("Player id not in list of players!")
+    | h::t -> if h.id = player_id then h
+      else helper t
+  in helper s.players_list
 
 let init_characters () = [Bran; NightKing; DaenerysTargareyan; JonSnow]
 
@@ -185,7 +198,8 @@ let init_state p eAI mAI hAI j =
    c_turn = orderl.(0); turns = orderl; turn = 0; c_phase = SetUp;
    continents = continents; countries = countries; unclaimed = u_countries;
    card_l = init_cards (); attackDice = []; defendDice = [];
-   fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg}
+   fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg;
+   card_bonus = 4; card_bonus_index = 0}
 
 let add_player id character st =
   let player = {id = id; character = character; deploy = 0; continents = [];
@@ -531,6 +545,22 @@ let print_state st =
       | Reinforce -> "Reinforce!" in
   s := !s ^ "Current Phase is " ^ s'; !s
 
+let check_cards (c1:string) (c2:string) (c3:string) =
+  match c1, c2, c3 with
+  | "wildcard", b, c -> if b = c || b <> c then true else false
+  | a, "wildcard", c -> if a = c || a <> c then true else false
+  | a, b, "wildcard" -> if a = b || a <> b then true else false
+  | _ -> if ((c1 = c2) && (c1 = c3) && (c2 = c3)) || ((c1 <> c2) && (c1 <> c3) && (c2 <> c3))
+    then true else false
+
+let parse_cards str =
+  match str with
+  | "bannerman" -> BannerMan
+  | "lord" -> Lord
+  | "dragon" -> Dragon
+  | "wildcard" -> WildCard
+  | _ -> failwith ("Impossible!")
+
 (*changes the game state based on the GUI input*)
 let do' cmd st =
   let _ = st.attackDice <- [] in
@@ -560,6 +590,30 @@ let do' cmd st =
       | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
   | Game x -> (match x with
       | Deploy -> (match cmd with
+          | TradeC (c1, c2, c3) ->
+            if (check_cards c1 c2 c3) <> true
+            then
+              let _ = st.repl_msg <- "Can't exchange cards!" in st
+            else
+              let bonus = st.card_bonus in
+              let plyr, nonplyrs = get_player st.c_turn st.players_list [] in
+              let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
+              let card1 = parse_cards c1 in
+              let card2 = parse_cards c2 in
+              let card3 = parse_cards c3 in
+              let new_lst = remove_l card3(remove_l card2(remove_l card1 plyr.cards)) in
+              let _ = plyr.cards <- new_lst in
+              let _ = plyr.deploy <- (plyr.deploy + bonus) in
+              let _ = st.players_list <- (plyr::nonplyrs) in
+              if st.card_bonus_index < 5
+              then
+                let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
+                let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in
+                let _ = st.c_phase <- Game (Deploy) in st
+              else
+                let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
+                let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in
+                let _ = st.c_phase <- Game (Deploy) in st
           | DeployC (n,c) ->
             (let player, pl = get_defender (String.uppercase_ascii c) st.players_list [] in
              if player.deploy = 0
@@ -589,8 +643,7 @@ let do' cmd st =
                  let st' = inc_troop n (String.uppercase_ascii c) st in
                  let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st'
                else let _ = st.repl_msg <- (string_of_int player.deploy) ^ " avaliable troops to deploy." in st)
-          (* | TradeC ->
-            let player, pl = get_player st.c_turn st.players_list [] in *)
+
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Attack -> (match cmd with
           | AttackC (c1, c2) -> attack (String.uppercase_ascii c1) (String.uppercase_ascii c2) st
@@ -632,15 +685,6 @@ let win state =
 let cards_owned plyr = plyr.cards
 
 let cards_free state = state.card_l
-
-let get_player_of_state s =
-  let player_id = s.c_turn in
-  let rec helper plyrs =
-    match plyrs with
-    | [] -> failwith ("Player id not in list of players!")
-    | h::t -> if h.id = player_id then h
-      else helper t
-  in helper s.players_list
 
 let get_player_by_id s id =
   let _ = print_string "rob's fault" in
