@@ -550,6 +550,12 @@ let do' cmd st =
         let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | DeployC (n,c) when n == 1 ->
         let st' = inc_troop 1 (String.uppercase_ascii c) st in
+        let _ =
+          if st'.repl_msg = st.c_turn ^ " does not own this country!"
+          then ()
+          else
+            let _ = st'.turn <- st'.turn + 1 in
+            let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in () in
         let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
   | Game x -> (match x with
