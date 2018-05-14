@@ -10,7 +10,7 @@ type country
 type player
 
 (* [card] is an abstract type representing a card in the game*)
-type card
+type card = BannerMan | Lord | Dragon | WildCard
 
 type continent
 
@@ -52,7 +52,7 @@ val exits: country -> string list
 *)
 val win: state -> bool
 
-(* [cards_owned p] returns a list of strings representing cards owned by p*)
+(* [cards_owned p] returns a list of cards representing cards owned by p*)
 val cards_owned: player -> card list
 
 val get_unclaimed: state -> string list
@@ -116,4 +116,4 @@ val get_country:string -> state -> country
 
 val country_owned_by_player: state -> string -> string
 
-val get_win_msg: state -> string 
+val get_win_msg: state -> string
