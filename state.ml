@@ -276,7 +276,7 @@ let inc_troop n c st =
   let _ = st.players_list <- (player::pl) in st
 
 let dec_troop n c st =
-  let player, pl = get_player st.c_turn st.players_list [] in
+  let player, pl = get_defender c st.players_list [] in
   let rec dec c cl =
     match cl with
     | [] -> []
@@ -388,26 +388,29 @@ let attack c c2 st =
         then if d_troops = 2
           then
             let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-            dec_troop (Array.length a_roll) c st'
+            dec_troop 2 c st'
           else dec_troop 2 c2 st (* Decrement Defense Troop *)
-        else if max_x > max_x2 || max2_x > max2_x2
-        then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
-        else dec_troop 2 c st (* Decerement Attack Troop *)
+        else
+        if max_x2 >= max_x && max2_x2 >= max2_x
+        then dec_troop 2 c st
+        else let st' = dec_troop 1 c st in dec_troop 1 c2 st' (* Decerement Attack Troop *)
       | [|x; x'; x''|], [|x2; x2'|] ->
-        let max_x = max_e [x;x'] in
+        let max_x = max_e [x;x';x''] in
         let max_x2 = max_e [x2;x2'] in
-        let max2_x = max2_e [|x;x'|] in
+        let max2_x = max2_e [|x;x';x''|] in
         let max2_x2 = max2_e [|x2;x2'|] in
         if max_x > max_x2 && max2_x > max2_x2
         then if d_troops = 2
           then
             let st' = conquer attacker defender pl c2 (Array.length a_roll) st in (* Conquer *)
-            dec_troop (Array.length a_roll) c st'
+            dec_troop 3 c st'
           else dec_troop 2 c2 st (* Decrement Defense Troop *)
-        else if max_x > max_x2 || max2_x > max2_x2
-        then let st' = dec_troop 2 c st in dec_troop 2 c2 st'
-        else dec_troop 2 c st (* Decerement Attack Troop *)
-      | _, _ -> let _ = st.repl_msg <- "Invalid Rolls" in st
+        else
+          if max_x2 >= max_x && max2_x2 >= max2_x
+          then dec_troop 2 c st
+          else let st' = dec_troop 1 c2 st in let st'' = dec_troop 1 c st' in
+            let _ = st''.repl_msg <- "1and1" in st''            (* Decerement Attack Troop *)
+      | _, _ -> (let _ = st.repl_msg <- "Invalid Rolls" in st)
 
 let rec reinforcable current_c dest neighbors cl visited st =
   match neighbors with
