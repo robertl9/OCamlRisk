@@ -340,7 +340,9 @@ let conquer a d pl c t st =
     let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "and "
                            ^ a.id^" has defeated " ^ d.id ^ "!" in
     print_string ("in loop") ;
+    let index = find_index st.turns a.id 0 in
     let _ = st.turns <- remove_card st.turns d.id in
+    let _ = st.turn <- index in
     let _ = st.players_list <- (a::pl) in st
   else
     let _ = d.continents <- conq_continent pc2 st.continents [] in
@@ -657,6 +659,9 @@ let country_owned_by_player s country_id =
       if iterate_through_countries country_ids country_id
       then h.id else helper t
   in helper s.players_list
+
+let get_win_msg s =
+  s.w_msg
 
 
 (* [taken s p] returns a list representing the countries in s
