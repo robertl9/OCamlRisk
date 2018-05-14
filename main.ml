@@ -24,7 +24,7 @@ let rec updateTerm state =
 
 (* [play_game f] plays the game in adventure file [f]. *)
 let play_game p eAI mAI hAI =
-  let w = GWindow.window ~title:"Risk" ~border_width:10 () in
+  let w = GWindow.window ~position:`CENTER ~title:"Risk" ~border_width:10 () in
   let _ = w#connect#destroy ~callback:GMain.Main.quit in
   let startState = (init_state p eAI mAI hAI (Yojson.Basic.from_file "map.json")) in
   draw w [] startState
