@@ -31,6 +31,7 @@ type player = {
   mutable continents: continent list;
   mutable countries_held: (string * int) list;
   mutable cards: card list;
+  mutable flag: bool
 }
 
 let troop_bonus_list= [4;6;8;10;12;15]
@@ -152,21 +153,21 @@ let to_countries a =
 let rec players n l =
   if n == 0 then l
   else let player = {id = string_of_int n; character = JonSnow; deploy = 0;
-                     continents = []; countries_held = []; cards = [];} in
+                     continents = []; countries_held = []; cards = []; flag = false} in
     let npl = player::l in
     players (n-1) npl
 
 let rec aiE p n l =
   if n == 0 then l
   else let player = {id = "ae"^string_of_int (p+n); character = JonSnow; deploy = 0;
-                     continents = []; countries_held = []; cards = [];} in
+                     continents = []; countries_held = []; cards = []; flag = false} in
     let npl = player::l in
     aiE p (n-1) npl
 
 let rec aiM p n l =
   if n == 0 then l
   else let player = {id = "am"^string_of_int (p+n); character = JonSnow; deploy = 0;
-                     continents = []; countries_held = []; cards = [];} in
+                     continents = []; countries_held = []; cards = [];flag = false} in
     let _ = print_int n in
     let _ = print_string (player.id^"\n") in
     let npl = player::l in
@@ -175,7 +176,7 @@ let rec aiM p n l =
 let rec aiH p n l =
   if n == 0 then l
   else let player = {id = "ah"^string_of_int (p+n); character = JonSnow; deploy = 0;
-                     continents = []; countries_held = []; cards = [];} in
+                     continents = []; countries_held = []; cards = []; flag = false} in
     let npl = player::l in
     aiH p (n-1) npl
 
@@ -203,7 +204,7 @@ let init_state p eAI mAI hAI j =
 
 let add_player id character st =
   let player = {id = id; character = character; deploy = 0; continents = [];
-                countries_held = []; cards = [];} in
+                countries_held = []; cards = []; flag = false} in
   let _ = st.players_list <- player::st.players_list in st
 
 let rec get_player p pl npl =
@@ -338,7 +339,12 @@ let rec to_country s cl =
   | h::t -> if String.uppercase_ascii h.country_id = String.uppercase_ascii s then h else to_country s t
 
 let conquer a d pl c t st =
-  let _ = draw_card st in
+  let _ = if a.flag = false then
+      let _ = draw_card st in
+      let plyr, nonplyrs = get_player st.c_turn st.players_list [] in
+      let _ = plyr.flag <- true in
+      let _ = st.players_list <- plyr::nonplyrs in st
+    else st in
   let f (k,v) = k <> c in
   let _ = a.countries_held <- ((c,t)::a.countries_held) in
   let _ = d.countries_held <- List.filter f d.countries_held in
@@ -646,7 +652,10 @@ let do' cmd st =
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Attack -> (match cmd with
           | AttackC (c1, c2) -> attack (String.uppercase_ascii c1) (String.uppercase_ascii c2) st
-          | EndPhaseC -> let _  = st.c_phase <- Game (Reinforce) in
+          | EndPhaseC -> let plyr, nonplyrs = get_player st.c_turn st.players_list [] in
+            let _ = plyr.flag <- false in
+            let _ = st.players_list <- plyr::nonplyrs in
+            let _  = st.c_phase <- Game (Reinforce) in
             let _ = st.repl_msg <- "EndPhase now reinforce" in st
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
       | Reinforce -> (match cmd with
