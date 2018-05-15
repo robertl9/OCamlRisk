@@ -166,7 +166,7 @@ let ai_claim st =
 let rec all_ai lst = 
   match lst with
   | [] -> true
-  | h::t-> if String.sub h 0 1 = "a" then all_ai t else false
+  | h::t-> if String.sub h 0 1 = "A" then all_ai t else false
 
 let rec ai_attack st = 
   let player = get_player_by_id st (get_cplayer st) in
@@ -193,7 +193,8 @@ let rec ai_attack st =
     | [] -> failwith "AI won"  
     | h::t -> if (List.length (get_enemies (get_neighbors h))) = 0 then get_ai_attacker t else h in
  *)
-  if all_ai (List.map (fun x -> get_player_id x) (get_player_list st)) then 
+  if (List.length (get_player_list st)) = 1 then EndPhaseC
+  else if all_ai (List.map (fun x -> String.uppercase_ascii(get_player_id x)) (get_player_list st)) then 
     let poss_att_lst = List.filter (fun x -> (get_troops (get_country_id x) player) > 1)
     (List.map (fun x -> get_country (fst x) (get_countries st)) (get_player_countries player)) in 
     if List.length poss_att_lst = 0 then EndPhaseC
