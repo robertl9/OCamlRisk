@@ -6,6 +6,9 @@ open Gtk
 let _ = GMain.Rc.add_default_file ("buttoncolors.rc")
 let _ = GtkMain.Main.init ()
 
+(* [winningScreen box msg w] draws the screen which occurs after
+ * a player has won. It displays the image riskEnd.png and a message which
+ * shows who won. *)
 let winningScreen box msg w =
   (* let _ = w #connect#destroy ~callback:GMain.Main.quit in *)
   let _ = box#destroy () in
@@ -15,6 +18,9 @@ let winningScreen box msg w =
   let _ = GMisc.label ~text:(msg) ~packing:(gameBoard#put ~x:400 ~y:85) () in
   GMain.Main.quit ()
 
+(* [action cl box w st] performs the actions which are registered by clicks
+ * on buttons and sends it as a command to the function do' in state and returns
+ * a state which is then sent to the method draw to be drawn onto the screen. *)
 let rec action cl box w st =
   (* let n = string_of_int ((int_of_string label#text) + 1) in
      label#set_text n *)
@@ -39,6 +45,9 @@ let rec action cl box w st =
           let fst_ctry = (List.hd(List.rev cl)) in
           let num_troops = get_troops fst_ctry plyr in
           let st' = do' (ReinforceC (num_troops - 1, List.hd (List.rev cl), List.hd cl)) st in draw w [] st'
+(* [aiAction box w st] performs the action done by the AI and
+ * sends it as a command to the function do' in state and returns
+* a state which is then sent to the method draw to be drawn onto the screen *)
 and aiAction box w st =
   let _ = print_string "ai actioning\n" in
   let _ = box#destroy () in
@@ -50,6 +59,8 @@ and aiAction box w st =
   else
   let st' = do' (cmd) st in
   draw w [] st'
+
+(* [draw window cl st] draws the entire updated map on the window *)
 and draw window cl st =
   let _ = window#connect#destroy ~callback:GMain.Main.quit in
   let main_hbox = GPack.hbox ~packing:window#add ~width:1200 ~height:700 () in
@@ -97,6 +108,8 @@ and draw window cl st =
   let finishButton = GButton.button ~label:"Finish" ~packing:(right_buttons#add) () in
   let _ = finishButton#connect#clicked ~callback: (fun () -> action ("END"::cl) main_hbox window st) in
 
+  (* [player_turn_image] determines the color to be drawn based on whose turn it
+  * is. *)
   let player_turn_image =
     match (get_cplayer st) with
     | "1" | "ae1" | "am1" | "ah1" -> (let _ = GMisc.image ~file:
@@ -113,7 +126,8 @@ and draw window cl st =
   let _ = player_turn_image in
 
   let countryTroops = getCountryTroops st in
-
+  (* [rc_file_text label] changes the labels which are different from the labels
+   * in the rc_file to the appropriate label in the rc file.  *)
   let rc_file_text label =
     match label with
     | "Casterly\nRock" -> "casterly"
@@ -126,7 +140,8 @@ and draw window cl st =
     | "Iron Islands" -> "ironislands"
     | _ -> String.lowercase_ascii label
   in
-
+  (* [button_color_determiner st label] determines the rc file label to be
+   * returned based on who owns the country and the color which goes with it.  *)
   let button_color_determiner st label =
     let plyr_id = country_owned_by_player st (String.uppercase_ascii label) in
     match plyr_id with
@@ -279,7 +294,8 @@ and draw window cl st =
       (try (string_of_int (List.assoc (String.uppercase_ascii countryU#label) countryTroops)) with
        | _ -> "0")
       ~packing:(gameBoard#put ~x: 538 ~y:265) () in
-
+  (* [image_match card] maps every card to the image to be drawn on the canvas.
+  *)
   let image_match card =
     match card with
     | BannerMan -> "images/BannerCard.png"
@@ -288,6 +304,8 @@ and draw window cl st =
     | WildCard -> "images/WildCard.png"
   in
 
+  (* [draw_cards] draws all the cards which the current player owns onto the
+     screen *)
   let draw_cards =
     let curr_player = get_player_of_state st in
     let card_lst = (cards_owned curr_player) in
@@ -298,6 +316,9 @@ and draw window cl st =
     done
   in let _ = draw_cards in
 
+  (* [aDice] draws the values of the attacking dice onto the screen during an
+     attack and draws images/nodice.png when not in an attack.
+  *)
   let aDice =
     match getAttackDice st with
     | [] ->
@@ -319,6 +340,9 @@ and draw window cl st =
     | _ -> (failwith "Invalid Roll") in
   let _ = aDice in
 
+  (* [dDice] draws the values of the defending dice onto the screen during an
+     attack and draws images/nodice.png when not in an attack.
+  *)
   let dDice =
     match getDefendDice st with
     | [] ->
@@ -339,7 +363,8 @@ and draw window cl st =
   else
     let _ = GMain.Main.main () in ()
 
-
+(* [selectPlayers p ai aiD r vbox w] passes the value of the button chosen by
+* the player in the selectPlayers screen. *)
 let selectPlayers p ai aiD r vbox w=
   let _ = vbox#destroy () in
   let _ = w#destroy () in
@@ -351,7 +376,9 @@ let selectPlayers p ai aiD r vbox w=
   |_->r := string_of_int p ^ "/0/0/0"
 
 
-
+(* [selectAIDifficulty p ai aiD r vbox window] passes the value of the button chosen by
+ * the player in the selectAIDifficulty screen and draws the screen on the
+ * window. *)
 let selectAIDifficulty p ai r vbox window=
   let _ = vbox#destroy () in
   let main_vbox = GPack.vbox ~packing:window#add ~width:600 ~height:700 () in
@@ -370,7 +397,9 @@ let selectAIDifficulty p ai r vbox window=
   p2#misc#set_name ("p0");
   ()
 
-
+(* [selectHumanPlayers p ai aiD r vbox window] passes the value of the button chosen by
+ * the player in the selectAIPlayers screen and draws the screen on the
+ * window. *)
 let selectHumanPlayers num r vbox window =
   let _ = vbox#destroy () in
   let main_vbox = GPack.vbox ~packing:window#add ~width:600 ~height:700 () in
@@ -463,6 +492,9 @@ let selectHumanPlayers num r vbox window =
     ()
   | _ -> failwith ("Cannot be possible!")
 
+(* [init_gui] passes the value of the button chosen by
+ * the player in the selectHuamnPlayers screen and draws the screen on the
+ * window. *)
 let init_gui () =
   let r = ref "" in
   let window = GWindow.window ~position:`CENTER ~title:"Risk" ~border_width:10 () in

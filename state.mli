@@ -193,6 +193,6 @@ val find_owner: string -> state -> player
 val reinforcable: string ->string ->
   country list -> country list -> country list -> state -> bool
 
+(* [get_bonus_troops st] returns an int representing how many troops
+   * the next exchange of cards will be worth *)
 val get_bonus_troops: state -> int
-
-val get_deploy: player -> int

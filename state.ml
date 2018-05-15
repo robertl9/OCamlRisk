@@ -130,11 +130,16 @@ let init_troops = 30
 let get_msg st =
   st.repl_msg
 
+(* [head_of_lst lst] returns the head of a list. If the list is empty,
+ *   then it returns an empty list.
+*)
+
 let head_of_lst lst =
   match lst with
   | [] -> []
   | h::t -> h
 
+(*Spec In mli file for state*)
 let get_player_of_state s =
   let player_id = s.c_turn in
   let rec helper plyrs =
@@ -144,9 +149,11 @@ let get_player_of_state s =
       else helper t
   in helper s.players_list
 
+(* [init_characters] initializes the special characters list. However,
+ * this isn't used in our assignment in the end. *)
 let init_characters () = [Bran; NightKing; DaenerysTargareyan; JonSnow]
 
-
+(* [init_cards] initializes the deck of cards which is to be drawn from. *)
 let init_cards () =
   let bm = Array.make 15 BannerMan in
   let l = Array.make 15 Lord in
@@ -235,6 +242,7 @@ let order n p eAI mAI hAI =
   for i = p+eAI to p+eAI+mAI-1 do ol.(i)<-("am"^string_of_int (i+1)) done;
   for i = p+eAI+mAI to p+eAI+mAI+hAI-1 do ol.(i)<-("ah"^string_of_int (i+1)) done; ol
 
+(*Spec In mli file for state*)
 let init_state p eAI mAI hAI j =
   let continents = j|> member "continents" |> to_list |> List.map to_continents in
   let countries = j|> member "countries" |> to_list |> List.map to_countries in
@@ -419,12 +427,18 @@ let dec_troop n c st =
   (* let _ = st.repl_msg <- c ^ " has lost" ^ (string_of_int n) ^ " troop!" in *)
   let _ = st.players_list <- (player::pl) in st
 
+(* [find_index a el index] finds the index of the element in the array.
+ * raises an error if the Array is empty. Should not be called if the array is
+ * empty.
+*)
 let rec find_index a el index =
   if Array.length a = 0 then failwith ("Impossible!")
   else if el = a.(0) then index
   else let new_array = Array.sub a 1 (Array.length a - 1) in
     find_index new_array el (index+1)
 
+(* [remove_card arr elem] returns the array arr with the element elem removed
+* from it. *)
 let remove_card arr elem =
   let index = find_index arr elem 0 in
   let arr1 = Array.sub arr 0 index in
@@ -488,28 +502,38 @@ let rec count_cards lst card card_acc wild_acc =
     else if h = WildCard then count_cards t card card_acc (1+wild_acc)
     else count_cards t card card_acc wild_acc
 
+(* [remove_elem elem lst] returns a new list with the element elem removed from
+ * it.
+*)
 let rec remove_elem elem lst =
   match lst with
   | [] -> []
   | h::t -> if h = elem then t
     else h::(remove_elem elem t)
 
-  let helper_conquer card1 card2 card3 st =
-    let plyr, nonplyrs = get_player st.c_turn st.players_list [] in
-    let bonus = st.card_bonus in
-    let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
-    let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
-    let _ = plyr.cards <- new_lst in
-    let _ = plyr.deploy <- (plyr.deploy + bonus) in
-    let _ = st.players_list <- (plyr::nonplyrs) in
-    if st.card_bonus_index < 5
-    then
-      let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
-      let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
-    else
-      let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
-      let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+(* [helper_conquer card1 card2 card3 st] returns state with the current player
+ * 's card1, card2, and card3 removed from its cards list. It also updates the
+   * deployment troops to account for the bonus from the cards.
+   *)
+let helper_conquer card1 card2 card3 st =
+  let plyr, nonplyrs = get_player st.c_turn st.players_list [] in
+  let bonus = st.card_bonus in
+  let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
+  let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
+  let _ = plyr.cards <- new_lst in
+  let _ = plyr.deploy <- (plyr.deploy + bonus) in
+  let _ = st.players_list <- (plyr::nonplyrs) in
+  if st.card_bonus_index < 5
+  then
+    let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
+    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+  else
+    let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
+    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
 
+(* [trade_conquer st] checks all possible combinations of card trading to
+ * automatically trade in cards until there are either less than 3 cards remaining
+* in the current player's cards or there are no further matches. *)
 let rec trade_conquer st =
   let plyr, nplyrs = get_player st.c_turn st.players_list [] in
   if List.length plyr.cards < 3 then st
@@ -539,7 +563,12 @@ let rec trade_conquer st =
                       helper_conquer Lord Dragon WildCard st in trade_conquer new_st
     else st
 
-
+(* [conquer a d pl c t st] returns state with updated ownership of countries
+ * after a player successfuly conquers a country. It also gives a card to the
+ * attacker on the first attack of the turn and it checks to see if the
+ * defender has any remaining countries. If it doesn't, then the attacker also
+ * takes all its cards and possibly goes into deploy phase again if they have more
+ * than 5 cards as a result. *)
 let conquer a d pl c t st =
   let _ = if a.flag = false then
       let _ = draw_card st in
@@ -762,6 +791,7 @@ let rec string_of_list l s =
   | [] -> s
   | h::t -> string_of_list t (s^h^"\n")
 
+(* [printOrder st] returns a string representation of the array st.turns *)
 let printOrder st =
   string_of_list (Array.to_list st.turns) ""
 
@@ -790,7 +820,10 @@ let print_state st =
       | Attack -> "Attack!"
       | Reinforce -> "Reinforce!" in
   s := !s ^ "Current Phase is " ^ s'; !s
-
+(* [helpercard1 card2 card3 st] returns state with the next player
+ * 's card1, card2, and card3 removed from its cards list. It also updates the
+   * deployment troops to account for the bonus from the cards and the territories owned.
+*)
   let helper card1 card2 card3 st  =
     let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
     let plyr, nonplyrs = get_player c_turn_after st.players_list [] in
@@ -810,7 +843,9 @@ let print_state st =
     else
       let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
       let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
-
+(* [tradest] checks all possible combinations of card trading to
+ * automatically trade in cards until there are either less than 3 cards remaining
+ * in the next player's cards or there are no further matches. *)
 let rec trade st =
   let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
   let plyr, nplyrs = get_player c_turn_after st.players_list [] in
@@ -962,6 +997,9 @@ let get_player_by_id s id =
       else helper t
   in helper s.players_list
 
+(* [iterate_through_countries lst id] returns a boolean representing if
+   the given id is in the lst
+*)
 let rec iterate_through_countries lst id =
   match lst with
   | [] -> false
