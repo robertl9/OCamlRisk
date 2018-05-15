@@ -1,5 +1,5 @@
 # OCamlRisk
-
+This is an outdated verision. Look at readme.txt
 To run the gui you must first have lablgtk2 installed on your device. We assume that oCaml 4.06.0 is installed.
 - This can be done on mac devices using "brew install lablgtk" (will install the required dependencies like gtk+)  
 - And then "opam install lablgtk"
