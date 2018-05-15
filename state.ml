@@ -534,6 +534,8 @@ let conquer a d pl c t st =
   let _ = d.countries_held <- List.filter f d.countries_held in
   (* Remove player from Playing List *)
 
+  let _ = print_string (string_of_int(List.length(get_player_list st))) in
+
   let pc = List.map (fun (k,v) -> k) a.countries_held in
   let _ = a.continents <- conq_continent pc st.continents [] in
   let pc2 = List.map (fun (k,v) -> k) d.countries_held in

@@ -187,21 +187,30 @@ let rec ai_attack st =
     | [] -> failwith "Player owns all countries; cannot be in attack phase"
     | h::t -> if (List.length (get_enemies (get_neighbors h))) = 0 then get_valid_attacker t else h in
 
-  (* used when only ai players exist *)
+(*   (* used when only ai players exist *)
   let rec get_ai_attacker lst = 
     match lst with
     | [] -> failwith "AI won"  
     | h::t -> if (List.length (get_enemies (get_neighbors h))) = 0 then get_ai_attacker t else h in
-
+ *)
   if all_ai (List.map (fun x -> get_player_id x) (get_player_list st)) then 
     let poss_att_lst = List.filter (fun x -> (get_troops (get_country_id x) player) > 1)
     (List.map (fun x -> get_country (fst x) (get_countries st)) (get_player_countries player)) in 
     if List.length poss_att_lst = 0 then EndPhaseC
     else if List.length (get_player_list st) = 1 then EndPhaseC
     else 
-      let att = get_ai_attacker poss_att_lst in 
-      let def = get_rand_item (List.map (fun x -> get_country (get_country_id x) (get_countries st)) (get_enemies (get_neighbors att))) in 
-      AttackC(get_country_id att, get_country_id def)
+      let sort_att a b =
+        let a_troops = get_troops (get_country_id a) player in 
+        let b_troops = get_troops (get_country_id b) (find_owner (get_country_id b) st) in 
+        if a_troops = b_troops then 0 else if a_troops > b_troops then 1 else -1 in 
+
+      let sorted_att = List.sort sort_att poss_att_lst in 
+        if List.length sorted_att = 0 then EndPhaseC else 
+          let att = List.hd(List.rev(List.sort sort_att poss_att_lst)) in 
+          let def_lst = (List.map (fun x -> get_country (get_country_id x) (get_countries st)) (get_enemies (get_neighbors att))) in 
+          if List.length def_lst = 0 then EndPhaseC
+            else let def = get_rand_item def_lst in 
+            AttackC(get_country_id att, get_country_id def)
   else
       let defend_sort_helper def attacker=
         (*higher, bigger pos difference between attacking and defending country*)
@@ -283,10 +292,10 @@ let rec ai_attack st =
       else if get_troops (get_country_id attacker) player < 2 then EndPhaseC
       (*depending on troop_diff, difficulty choose whether or not to attack*)    
       else if ai_diff = "e" then
-        if troop_diff > -1 then
+        if troop_diff > -3 then
         AttackC(get_country_id attacker, get_country_id defender) else EndPhaseC
       else 
-        if troop_diff > 0 then
+        if troop_diff > -1 then
         AttackC(get_country_id attacker, get_country_id defender) else EndPhaseC
 
 
@@ -401,7 +410,6 @@ let ai_rein st =
 
 let determine_move st =
   let _ = print_string "ai movinng\n" in
-  let _ = print_string (string_of_int(List.length(get_player_list st))) in
   match getPhase st with
   | SetUp -> ai_claim st
   | Game(p)->
