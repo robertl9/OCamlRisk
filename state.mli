@@ -174,12 +174,16 @@ val get_player_id:  player -> string
 *)
 val get_troops: string -> player -> int
 
+(* [get_conts_on pl c] returns a list of continent ids which the player owns] *)
 val get_conts_on: player -> country list -> string list
 
+(* [get_all_continents s] returns a list of continents in the state. *)
 val get_all_continents: state -> continent list
 
+(* [get_conts_countries c] returns a list of countries in the continent *)
 val get_cont_countries: continent -> string list
 
+(* [find_owner c st] returns the owner of the continent *)
 val find_owner: string -> state -> player
 
 (* [reinforcable c1 c2 neighbors cl st] returns boolean if c1 and c2 are
