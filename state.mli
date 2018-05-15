@@ -120,6 +120,8 @@ val get_win_msg: state -> string
 
 val get_player_by_id: state -> string -> player
 
+val get_player_id:  player -> string
+
 val get_troops: string -> player -> int
 
 val get_conts_on: player -> country list -> string list

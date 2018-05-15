@@ -171,20 +171,21 @@ let rec ai_attack st =
     | h::t -> if (List.length (get_enemies (get_neighbors h))) = 0 then get_valid_attacker t else h in
 
   (* used when only ai players exist *)
-  let rec get_ai_attacker c lst = 
+  let rec get_ai_attacker lst = 
     match lst with
-    | [] -> failwith "Player owns all countries; cannot be in attack phase"
-    | h::t -> if (List.length (get_enemies (get_neighbors h))) = 0 then get_valid_attacker t else h in
-(* 
+    | [] -> failwith "AI won"
+    | h::t -> if (List.length (get_enemies (get_neighbors h))) = 0 then get_ai_attacker t else h in
+
   if all_ai (List.map (fun x -> get_player_id x) (get_player_list st)) then 
-    let poss_att_lst = List.filter (fun x -> (get_troops (get_country_id x) (get_countries st)) > 1)
+    let poss_att_lst = List.filter (fun x -> (get_troops (get_country_id x) player) > 1)
     (List.map (fun x -> get_country (fst x) (get_countries st)) (get_player_countries player)) in 
     if List.length poss_att_lst = 0 then EndPhaseC
+    else if List.length (get_player_list st) = 1 then EndPhaseC
     else 
       let att = get_ai_attacker poss_att_lst in 
-      let def = get_rand_item (List.map (fun x -> get_country x (get_countries st)) (get_enemies (get_neighbors att))) in 
+      let def = get_rand_item (List.map (fun x -> get_country (get_country_id x) (get_countries st)) (get_enemies (get_neighbors att))) in 
       AttackC(get_country_id att, get_country_id def)
-  else *)
+  else
       let defend_sort_helper def attacker=
         (*higher, bigger pos difference between attacking and defending country*)
         let troop_diff_factor = get_troops (get_country_id attacker) player - 
