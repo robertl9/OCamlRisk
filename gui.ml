@@ -372,26 +372,6 @@ let selectHumanPlayers num r vbox window =
       ~spacing:20 ~packing:(mainBoard#put ~x:300 ~y:200)() in
   (* let biggerWindow = GWindow.window ~width:1000 ~height:800 ~title:"Game" ~border_width:10 () in *)
   match num with
-  | 0 ->
-    let i1 = GButton.button ~label:"0 AI Players (INVALID)" ~packing:vbox1#add () in
-    let _ = i1#connect#clicked ~callback: (fun () -> ()) in
-    i1#misc#set_name ("i0");
-    let i2 = GButton.button ~label:"1 AI Player (INVALID)" ~packing:vbox2#add () in
-    let _ = i2#connect#clicked ~callback: (fun () -> ()) in
-    i2#misc#set_name ("i0");
-    let p3 = GButton.button ~label:"2 AI Players" ~packing:vbox1#add () in
-    let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 2 r main_vbox window) in
-    p3#misc#set_name ("p0");
-    let p4 = GButton.button ~label:"3 AI Players" ~packing:vbox2#add () in
-    let _ = p4#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 3 r main_vbox window) in
-    p4#misc#set_name ("p0");
-    let p5 = GButton.button ~label:"4 AI Players" ~packing:vbox1#add () in
-    let _ = p5#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 4 r main_vbox window) in
-    p5#misc#set_name ("p0");
-    let p6 = GButton.button ~label:"5 AI Players" ~packing:vbox2#add () in
-    p6#misc#set_name ("p0");
-    let _ = p6#connect#clicked ~callback: (fun () -> selectAIDifficulty 0 5 r main_vbox window)
-    in ()
   | 1 ->
     let i1 = GButton.button ~label:"0 AI Players (INVALID)" ~packing:vbox1#add () in
     let _ = i1#connect#clicked ~callback: (fun () -> ()) in
@@ -484,23 +464,22 @@ let init_gui () =
       ~spacing:20 ~packing:(mainBoard#put ~x:100 ~y:200)() in
   let vbox2 = GPack.button_box `VERTICAL ~border_width:20 ~child_width:150 ~child_height:120
       ~spacing:20 ~packing:(mainBoard#put ~x:300 ~y:200)() in
+  let vbox3 = GPack.button_box `VERTICAL ~border_width:20 ~child_width:350 ~child_height:120
+        ~spacing:20 ~packing:(mainBoard#put ~x:100 ~y:480)() in
 
-  let p0 = GButton.button ~label:"0 Human Players" ~packing:vbox1#add () in
-  let _ = p0#connect#clicked ~callback: (fun () -> selectHumanPlayers 0 r main_vbox window) in
-  p0#misc#set_name ("p0");
-  let p1 = GButton.button ~label:"1 Human Players" ~packing:vbox2#add () in
+  let p1 = GButton.button ~label:"1 Human Players" ~packing:vbox1#add () in
   let _ = p1#connect#clicked ~callback: (fun () -> selectHumanPlayers 1 r main_vbox window) in
   p1#misc#set_name ("p0");
-  let p2 = GButton.button ~label:"2 Human Players" ~packing:vbox1#add () in
+  let p2 = GButton.button ~label:"2 Human Players" ~packing:vbox2#add () in
   let _ = p2#connect#clicked ~callback: (fun () -> selectHumanPlayers 2 r main_vbox window) in
   p2#misc#set_name ("p0");
-  let p3 = GButton.button ~label:"3 Human Players" ~packing:vbox2#add () in
+  let p3 = GButton.button ~label:"3 Human Players" ~packing:vbox1#add () in
   let _ = p3#connect#clicked ~callback: (fun () -> selectHumanPlayers 3 r main_vbox window) in
   p3#misc#set_name ("p0");
-  let p4 = GButton.button ~label:"4 Human Players" ~packing:vbox1#add () in
+  let p4 = GButton.button ~label:"4 Human Players" ~packing:vbox2#add () in
   let _ = p4#connect#clicked ~callback: (fun () -> selectHumanPlayers 4 r main_vbox window) in
   p4#misc#set_name ("p0");
-  let p5 = GButton.button ~label:"5 Human Players" ~packing:vbox2#add () in
+  let p5 = GButton.button ~label:"5 Human Players" ~packing:vbox3#add () in
   let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 5 0 "" r main_vbox window) in
   p5#misc#set_name ("p0");
   let _ = window#show () in
