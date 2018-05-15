@@ -295,7 +295,7 @@ let rec conq_continent countryl continentl cl =
     let rec contains_all l =
       match l with
       | [] -> conq_continent countryl t (h::cl)
-      | h'::t' -> let _ = print_string h' in
+      | h'::t' -> 
         if List.mem h' countryl
         then contains_all t'
         else conq_continent countryl t cl in
@@ -989,7 +989,6 @@ let cards_free state = state.card_l
 
 (*Spec In mli file for state*)
 let get_player_by_id s id =
-  let _ = print_string "rob's fault" in
   let rec helper plyrs =
     match plyrs with
     | [] -> failwith ("Player id not in list of players!")
