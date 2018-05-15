@@ -7,10 +7,12 @@ let _ = GMain.Rc.add_default_file ("buttoncolors.rc")
 let _ = GtkMain.Main.init ()
 
 let winningScreen box msg w =
+  (* let _ = w #connect#destroy ~callback:GMain.Main.quit in *)
   let _ = box#destroy () in
   let main_hbox = GPack.hbox ~packing:w#add ~width:1200 ~height:700 () in
   let gameBoard = GPack.fixed ~packing:main_hbox#add () in
   let _ = GMisc.image ~file: "images/riskEnd.png" ~packing:(gameBoard#put ~x:0 ~y:0) () in
+  let _ = GMisc.label ~text:(msg) ~packing:(gameBoard#put ~x:400 ~y:85) () in
   GMain.Main.quit ()
 
 let rec action cl box w st =
@@ -41,6 +43,11 @@ and aiAction box w st =
   let _ = print_string "ai actioning\n" in
   let _ = box#destroy () in
   let cmd = determine_move st in
+  if List.length (get_player_list st) = 1 then
+    let plyr = get_cplayer st in
+    let main_hbox = GPack.hbox ~packing:w#add ~width:1200 ~height:700 () in
+    winningScreen main_hbox ("Congratulations Player: " ^ plyr) w
+  else
   let st' = do' (cmd) st in
   draw w [] st'
 and draw window cl st =
@@ -48,7 +55,8 @@ and draw window cl st =
   let main_hbox = GPack.hbox ~packing:window#add ~width:1200 ~height:700 () in
   let has_won st =
     if List.length (get_player_list st) = 1
-    then winningScreen main_hbox (get_win_msg st) window
+    then let plyr = get_cplayer st in
+      winningScreen main_hbox ("Congratulations Player: " ^ plyr) window
     else () in
   let _ = has_won st in
   let gameBoard = GPack.fixed ~packing:main_hbox#add () in
