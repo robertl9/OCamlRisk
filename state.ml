@@ -458,7 +458,7 @@ let rec to_country s cl =
 
 let rec count_cards lst card card_acc wild_acc =
   match lst with
-  | [] -> if card_acc + wild_acc >= 3 then (true, card_acc, wild_acc)
+  | [] -> if card_acc >= 3 then (true, card_acc, wild_acc)
     else (false, card_acc, wild_acc)
   | h::t -> if h = card then count_cards t card (1+card_acc) wild_acc
     else if h = WildCard then count_cards t card card_acc (1+wild_acc)
@@ -470,25 +470,51 @@ let rec remove_elem elem lst =
   | h::t -> if h = elem then t
     else h::(remove_elem elem t)
 
-let helper card1 card2 card3 st  =
-  let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
-  let plyr, nonplyrs = get_player c_turn_after st.players_list [] in
-  let bonus = st.card_bonus in
-  let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
-  let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
-  let _ = plyr.cards <- new_lst in
-  let troops = (if ((List.length plyr.countries_held)/3 <= 3)
-                then 3 else (List.length plyr.countries_held)/3) +
-               List.fold_left (fun x y -> x + y.bonus_troops) 0 plyr.continents in
-  let _ = plyr.deploy <- (plyr.deploy + bonus + troops) in
-  let _ = st.players_list <- (plyr::nonplyrs) in
-  if st.card_bonus_index < 5
-  then
-    let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
-    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+  let helper_conquer card1 card2 card3 st =
+    let plyr, nonplyrs = get_player st.c_turn st.players_list [] in
+    let bonus = st.card_bonus in
+    let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
+    let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
+    let _ = plyr.cards <- new_lst in
+    let _ = plyr.deploy <- (plyr.deploy + bonus) in
+    let _ = st.players_list <- (plyr::nonplyrs) in
+    if st.card_bonus_index < 5
+    then
+      let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
+      let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+    else
+      let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
+      let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+
+let rec trade_conquer st =
+  let plyr, nplyrs = get_player st.c_turn st.players_list [] in
+  if List.length plyr.cards < 3 then st
   else
-    let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
-    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+    let (x1,y1,z) = count_cards plyr.cards BannerMan 0 0 in
+    let (x2,y2,_) = count_cards plyr.cards Lord 0 0  in
+    let (x3,y3,_) = count_cards plyr.cards Dragon 0 0  in
+    if x1 then let new_st =
+                 helper_conquer BannerMan BannerMan BannerMan st in trade_conquer new_st
+    else if x2 then let new_st =
+                 helper_conquer Lord Lord Lord st in trade_conquer new_st
+    else if x3 then let new_st =
+                      helper_conquer Dragon Dragon Dragon st in trade_conquer new_st
+    else if z = 0 && (y1 > 0 && y2 > 0 && y3 > 0) then let new_st =
+                      helper_conquer BannerMan Dragon Lord st in trade_conquer new_st
+    else if z > 0 && (y1 >= 2) then let new_st =
+                      helper_conquer BannerMan BannerMan WildCard st in trade_conquer new_st
+    else if z > 0 && (y2 >= 2) then let new_st =
+                      helper_conquer Lord Lord WildCard st in trade_conquer new_st
+    else if z > 0 && (y3 >= 2) then let new_st =
+                      helper_conquer Dragon Dragon WildCard st in trade_conquer new_st
+    else if z > 0 && (y1 = 1 && y2 = 1 && y3 = 0) then let new_st =
+                      helper_conquer BannerMan Lord WildCard st in trade_conquer new_st
+    else if z > 0 && (y1 = 1 && y2 = 0 && y3 = 1) then let new_st =
+                      helper_conquer BannerMan Dragon WildCard st in trade_conquer new_st
+    else if z > 0 && (y1 = 0 && y2 = 1 && y3 = 1) then let new_st =
+                      helper_conquer Lord Dragon WildCard st in trade_conquer new_st
+    else st
+
 
 let conquer a d pl c t st =
   let _ = if a.flag = false then
@@ -512,11 +538,14 @@ let conquer a d pl c t st =
     let _ = a.cards <- a.cards @ d.cards in
     let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "and "
                            ^ a.id^" has defeated " ^ d.id ^ "!" in
-    print_string ("in loop") ;
-    let index = find_index st.turns a.id 0 in
     let _ = st.turns <- remove_card st.turns d.id in
+    let index = find_index st.turns a.id 0 in
     let _ = st.turn <- index in
-    let _ = st.players_list <- (a::pl) in st
+    let _ = st.players_list <- (a::pl) in
+    if List.length a.cards > 5 then
+      let _ = trade_conquer st in
+      let _ = st.c_phase <- Game(Deploy) in st
+    else st
   else
     let _ = d.continents <- conq_continent pc2 st.continents [] in
     let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "!" in
@@ -731,6 +760,26 @@ let print_state st =
       | Attack -> "Attack!"
       | Reinforce -> "Reinforce!" in
   s := !s ^ "Current Phase is " ^ s'; !s
+
+  let helper card1 card2 card3 st  =
+    let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
+    let plyr, nonplyrs = get_player c_turn_after st.players_list [] in
+    let bonus = st.card_bonus in
+    let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
+    let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
+    let _ = plyr.cards <- new_lst in
+    let troops = (if ((List.length plyr.countries_held)/3 <= 3)
+                  then 3 else (List.length plyr.countries_held)/3) +
+                 List.fold_left (fun x y -> x + y.bonus_troops) 0 plyr.continents in
+    let _ = plyr.deploy <- (plyr.deploy + bonus + troops) in
+    let _ = st.players_list <- (plyr::nonplyrs) in
+    if st.card_bonus_index < 5
+    then
+      let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
+      let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+    else
+      let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
+      let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
 
 let rec trade st =
   let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
