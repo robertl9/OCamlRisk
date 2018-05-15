@@ -183,6 +183,10 @@ val get_troops: string -> player -> int
 
 val get_conts_on: player -> country list -> string list
 
+val get_all_continents: state -> continent list
+
+val get_cont_countries: continent -> string list
+
 val find_owner: string -> state -> player
 
 (* [reinforcable c1 c2 neighbors cl st] returns boolean if c1 and c2 are

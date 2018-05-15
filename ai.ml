@@ -38,9 +38,17 @@ open Command
    (*difference between enemy neighbors and country's troops...higher means greater need to deploy*)
    let enemy_factor = if (List.length(enemy_neighbors)) > 0 then (Random.int (List.length(enemy_neighbors))) else 0 in 
 
+   let num_on_cont = List.length(List.filter (fun x-> String.uppercase_ascii(get_country_content(get_country x (get_countries st)))   
+    = String.uppercase_ascii(get_country_content(c1))) (get_neighbors c1)) in 
+
+   let total_on_cont = List.length(get_cont_countries(List.find (fun x-> String.uppercase_ascii(get_continent_id x) = String.uppercase_ascii(get_country_content(c1)))
+          (get_all_continents st))) in 
+
+   let cont_factor = if num_on_cont > total_on_cont/2 then (5 - (total_on_cont - num_on_cont)) * enemy_factor else 0 in 
    if (List.length(enemy_neighbors)) = 0 then -100000  
-   else if ai_diff = "m" then (List.length (enemy_neighbors)) + enemy_factor
-   else 4 * (List.length (enemy_neighbors)) + 2 * (get_diffs (get_troops (get_country_id c1) player) 0 enemy_neighbors) + 2 * enemy_on_cont
+   else if ai_diff = "m" then (List.length (enemy_neighbors)) + enemy_factor + cont_factor
+   else 4 * (List.length (enemy_neighbors)) + 2 * (get_diffs (get_troops (get_country_id c1) player) 0 enemy_neighbors) 
+    + 2 * enemy_on_cont + cont_factor
 
 let get_rand_item lst = List.nth lst (Random.int (List.length lst))
 
@@ -125,7 +133,9 @@ let ai_claim st =
       let enemy_on_cont = List.length( List.filter (fun x-> (String.uppercase_ascii (get_country_content x)) = 
         (String.uppercase_ascii (get_country_content c1))) my_enemies) in 
 
-      (3 * c1_com_conts + 2 * c1_neighbors - 2 * (List.length my_enemies) - 2 * enemy_on_cont)  in
+      let init_claim = if List.length(get_player_countries player) = 0 then 5 * enemy_on_cont else 0 in 
+
+      (4 * c1_com_conts + 3 * c1_neighbors - 4 * (List.length my_enemies) - enemy_on_cont - init_claim)  in
 
     (* used to sort the list *)
     let comp_c_rank c1 c2 =
@@ -180,7 +190,7 @@ let rec ai_attack st =
   (* used when only ai players exist *)
   let rec get_ai_attacker lst = 
     match lst with
-    | [] -> failwith "AI won"
+    | [] -> failwith "AI won"  
     | h::t -> if (List.length (get_enemies (get_neighbors h))) = 0 then get_ai_attacker t else h in
 
   if all_ai (List.map (fun x -> get_player_id x) (get_player_list st)) then 

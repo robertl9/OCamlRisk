@@ -39,6 +39,7 @@ let troop_bonus_list= [4;6;8;10;12;15]
 let get_continents pl =
   pl.continents
 
+
 type state = {
   mutable players_list: player list;
   mutable c_turn: string;
@@ -58,9 +59,14 @@ type state = {
   w_msg: string;
 }
 
+let get_all_continents st =
+  st.continents
 
 let get_countries st =
   st.countries
+
+let get_cont_countries c =
+  c.country_list
 
 (* [getCountryTroops st] returns association list of country id and troops
  * requires: st is a state
