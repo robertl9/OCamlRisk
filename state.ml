@@ -455,6 +455,41 @@ let rec to_country s cl =
              t is sn int
              st is a state
 *)
+
+let rec count_cards lst card card_acc wild_acc =
+  match lst with
+  | [] -> if card_acc + wild_acc >= 3 then (true, card_acc, wild_acc)
+    else (false, card_acc, wild_acc)
+  | h::t -> if h = card then count_cards t card (1+card_acc) wild_acc
+    else if h = WildCard then count_cards t card card_acc (1+wild_acc)
+    else count_cards t card card_acc wild_acc
+
+let rec remove_elem elem lst =
+  match lst with
+  | [] -> []
+  | h::t -> if h = elem then t
+    else h::(remove_elem elem t)
+
+let helper card1 card2 card3 st  =
+  let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
+  let plyr, nonplyrs = get_player c_turn_after st.players_list [] in
+  let bonus = st.card_bonus in
+  let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
+  let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
+  let _ = plyr.cards <- new_lst in
+  let troops = (if ((List.length plyr.countries_held)/3 <= 3)
+                then 3 else (List.length plyr.countries_held)/3) +
+               List.fold_left (fun x y -> x + y.bonus_troops) 0 plyr.continents in
+  let _ = plyr.deploy <- (plyr.deploy + bonus + troops) in
+  let _ = st.players_list <- (plyr::nonplyrs) in
+  if st.card_bonus_index < 5
+  then
+    let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
+    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+  else
+    let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
+    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+
 let conquer a d pl c t st =
   let _ = if a.flag = false then
       let _ = draw_card st in
@@ -472,7 +507,8 @@ let conquer a d pl c t st =
   let pc2 = List.map (fun (k,v) -> k) d.countries_held in
   let _ = st.repl_msg <- string_of_int (List.length d.countries_held) in
   (* print_int (List.length d.countries_held) ;  *)
-  if List.length d.countries_held = 0 then
+  if List.length d.countries_held = 0
+  then
     let _ = a.cards <- a.cards @ d.cards in
     let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "and "
                            ^ a.id^" has defeated " ^ d.id ^ "!" in
@@ -696,37 +732,6 @@ let print_state st =
       | Reinforce -> "Reinforce!" in
   s := !s ^ "Current Phase is " ^ s'; !s
 
-let rec count_cards lst card card_acc wild_acc =
-  match lst with
-  | [] -> if card_acc + wild_acc >= 3 then (true, card_acc, wild_acc)
-    else (false, card_acc, wild_acc)
-  | h::t -> if h = card then count_cards t card (1+card_acc) wild_acc
-    else if h = WildCard then count_cards t card card_acc (1+wild_acc)
-    else count_cards t card card_acc wild_acc
-
-let rec remove_elem elem lst =
-  match lst with
-  | [] -> []
-  | h::t -> if h = elem then t
-    else h::(remove_elem elem t)
-
-let helper card1 card2 card3 st  =
-  let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
-  let plyr, nonplyrs = get_player c_turn_after st.players_list [] in
-  let bonus = st.card_bonus in
-  let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
-  let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
-  let _ = plyr.cards <- new_lst in
-  let _ = plyr.deploy <- (plyr.deploy + bonus) in
-  let _ = st.players_list <- (plyr::nonplyrs) in
-  if st.card_bonus_index < 5
-  then
-    let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
-    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
-  else
-    let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
-    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
-
 let rec trade st =
   let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
   let plyr, nplyrs = get_player c_turn_after st.players_list [] in
@@ -888,3 +893,9 @@ let country_owned_by_player s country_id =
 
 let get_win_msg s =
   s.w_msg
+
+let get_bonus_troops s =
+  s.card_bonus
+
+let get_deploy plyr =
+  plyr.deploy

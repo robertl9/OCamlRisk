@@ -194,4 +194,8 @@ val find_owner: string -> state -> player
              cl is a country list
 *)
 val reinforcable: string ->string ->
-           country list -> country list -> country list -> state -> bool
+  country list -> country list -> country list -> state -> bool
+
+val get_bonus_troops: state -> int
+
+val get_deploy: player -> int 

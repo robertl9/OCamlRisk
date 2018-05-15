@@ -55,6 +55,14 @@ and draw window cl st =
   let _ = GMisc.image ~file: "images/riskmap.png" ~packing:(gameBoard#put ~x:0 ~y:0) () in
   let _ = GMisc.label ~text:(get_cplayer st) ~packing:(gameBoard#put ~x:1090 ~y:15) () in
   let _ = GMisc.label ~text:((get_msg st)^"\n"^(getPhaseString st)^"\n"^(printOrder st)) ~packing:(gameBoard#put ~x:1025 ~y:525) () in
+  let txt = string_of_int (get_bonus_troops st) in
+  let _ = GMisc.label ~text:("Next card bonus: " ^ txt)
+      ~packing:(gameBoard#put ~x:800 ~y:35) () in
+  let _ = if getPhase st = Game(Deploy) then
+      let str = string_of_int (get_deploy(get_player_of_state st)) in
+      let _ = GMisc.label ~text:("Troops left to deploy: " ^ str)
+          ~packing:(gameBoard#put ~x:800 ~y:50) () in ()
+    else () in
   let right_buttons = GPack.button_box `VERTICAL ~border_width:0 ~child_width:160 ~child_height:30
       ~spacing:10 ~packing:(gameBoard#put ~x:1020 ~y:40) () in
 
