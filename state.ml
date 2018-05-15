@@ -252,13 +252,13 @@ let get_player_id pl =
 let rec get_country str_country lst =
   match lst with
   | [] -> failwith "Country not found"
-  | h::t -> if String.uppercase_ascii h.country_id = 
+  | h::t -> if String.uppercase_ascii h.country_id =
     String.uppercase_ascii str_country then h else get_country str_country t
 
-let get_conts_on player st= 
-  List.map (fun x -> (String.lowercase_ascii x.c_id)) 
+let get_conts_on player st=
+  List.map (fun x -> (String.lowercase_ascii x.c_id))
   (List.map (fun x -> get_country (fst x) st) player.countries_held)
-  
+
 let rec get_defender c pl npl =
   let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then true else x || false in
   match pl with
@@ -276,23 +276,23 @@ let get_troops c p =
   List.fold_left f 0 p.countries_held
 
 
-let find_owner c st = 
-  let c_held_lists = List.flatten (List.map (fun x -> (x.countries_held)) st.players_list) in 
-  let rec get_p tup lst = 
-    match lst with 
+let find_owner c st =
+  let c_held_lists = List.flatten (List.map (fun x -> (x.countries_held)) st.players_list) in
+  let rec get_p tup lst =
+    match lst with
     | [] -> failwith "Country not owned by a player, not possible outside of SetUp"
     | h::t -> if List.mem tup h.countries_held then h else get_p tup t in
-  let rec make_lst assocs = 
-    match assocs with 
+  let rec make_lst assocs =
+    match assocs with
     | [] -> []
-    | (k,v)::t -> ((get_p (k,v) st.players_list), k, v)::(make_lst t) in 
+    | (k,v)::t -> ((get_p (k,v) st.players_list), k, v)::(make_lst t) in
   (*list of (player, country name, num troops*)
-  let lst = make_lst c_held_lists in 
-  let rec find_p lst = 
+  let lst = make_lst c_held_lists in
+  let rec find_p lst =
     match lst with
     | [] -> failwith "Invalid country, no owner found"
     | (p,k,v)::t -> if String.uppercase_ascii k = String.uppercase_ascii c then p else find_p t in
-  find_p lst 
+  find_p lst
 
 let calc_troops player =
   if player.deploy = 0 then
@@ -649,7 +649,7 @@ let do' cmd st =
   match st.c_phase with
   | SetUp -> (match cmd with
       | ClaimC (c) when st.unclaimed != [] -> let st' = pick_country (String.uppercase_ascii c) st in
-        let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
+        let _ = if st'.turn = (Array.length st'.turns)*10 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | ClaimC (c) when st.unclaimed = [] ->
         let st' = inc_troop 1 (String.uppercase_ascii c) st in
         let _ =
@@ -658,7 +658,7 @@ let do' cmd st =
           else
             let _ = st'.turn <- st'.turn + 1 in
             let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in () in
-        let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
+        let _ = if st'.turn = (Array.length st'.turns)*10 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | DeployC (n,c) when n == 1 ->
         let st' = inc_troop 1 (String.uppercase_ascii c) st in
         let _ =
@@ -667,7 +667,7 @@ let do' cmd st =
           else
             let _ = st'.turn <- st'.turn + 1 in
             let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in () in
-        let _ = if st'.turn = (Array.length st'.turns)*8 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
+        let _ = if st'.turn = (Array.length st'.turns)*10 then st'.c_phase <- Game (Deploy) else st'.c_phase <- st'.c_phase in st'
       | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
   | Game x -> (match x with
       | Deploy -> (match cmd with
