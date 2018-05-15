@@ -58,6 +58,26 @@ style "highlight_turn"
   fg[NORMAL] = { .99, 0, .99 }
 }
 
+style "invalid_buttons"
+{
+  bg[PRELIGHT] = {0.905, 0.298, 0.235}
+  fg[PRELIGHT] = { 0.99, 0, 0.99}
+  bg[ACTIVE] = { 0.905, 0.298, 0.235}
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = { 0.905, 0.298, 0.235 }
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
+style "start_buttons"
+{
+  bg[PRELIGHT] = {0.945, 0.768, 0.058}
+  fg[PRELIGHT] = { 0.99, 0, 0.99}
+  bg[ACTIVE] = {0.945, 0.768, 0.058}
+  fg[ACTIVE] = { 0.99, 0, 0.99 }
+  bg[NORMAL] = {0.945, 0.768, 0.058}
+  fg[NORMAL] = { .99, 0, .99 }
+}
+
 widget "*winterG" style "green_button"
 widget "*winterfellG" style "green_button"
 widget "*riverrunG" style "green_button"
@@ -167,3 +187,7 @@ widget "*setupsetup" style "highlight_turn"
 widget "*deploydeploy" style "highlight_turn"
 widget "*attackattack" style "highlight_turn"
 widget "*reinforcereinforce" style "highlight_turn"
+
+widget "*p0" style "start_buttons"
+
+widget "*i0" style "invalid_buttons"

@@ -117,3 +117,5 @@ val get_country:string -> state -> country
 val country_owned_by_player: state -> string -> string
 
 val get_win_msg: state -> string
+
+val get_troops: country -> player -> int 
