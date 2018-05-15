@@ -128,6 +128,11 @@ let file1 = Yojson.Basic.from_file "map.json"
 let full1 = ref (init_state 5 0 0 0 file1)
 
 let full_tests = [
+
+  (*Begin test cases to see if claiming works with only human players Checking
+    to make sure that only claimed countries can be claimed and countries can be
+    claimed until there are no longer any free countries. Also ensuring that each
+    player is getting countries added to their list of countries*)
   "correctPlayers" >:: (fun _ -> assert_equal 5 (List.length (get_player_list !full1)));
 
   "noclaim" >:: (fun _ -> assert_equal 20 (List.length (get_unclaimed !full1)));
@@ -253,6 +258,7 @@ let full_tests = [
   "cp21" >:: (fun _ -> assert_equal 4 (List.length (get_player_countries (get_player_by_id !full1 "5"))));
   "correctPlayer21" >:: (fun _ -> assert_equal "1" (get_cplayer !full1));
   "cpc21" >:: (fun _ -> assert_equal 4 (List.length (get_player_countries (get_player_of_state !full1))));
+  (*End test cases to see if claiming works with only human players*)
 ]
 
 

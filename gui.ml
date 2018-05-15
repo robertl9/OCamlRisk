@@ -54,7 +54,7 @@ and draw window cl st =
   let gameBoard = GPack.fixed ~packing:main_hbox#add () in
   let _ = GMisc.image ~file: "images/riskmap.png" ~packing:(gameBoard#put ~x:0 ~y:0) () in
   let _ = GMisc.label ~text:(get_cplayer st) ~packing:(gameBoard#put ~x:1090 ~y:15) () in
-  let _ = GMisc.label ~text:((get_msg st)^"\n"^(getPhaseString st)^"\n"^(printOrder st)) ~packing:(gameBoard#put ~x:1025 ~y:525) () in
+  let _ = GMisc.label ~text:((get_msg st)^"\n"^(getPhaseString st)^"\n\n"^"Order of Players is:\n"^(printOrder st)) ~packing:(gameBoard#put ~x:1025 ~y:525) () in
   let txt = string_of_int (get_bonus_troops st) in
   let _ = GMisc.label ~text:("Next card bonus: " ^ txt)
       ~packing:(gameBoard#put ~x:800 ~y:35) () in
@@ -276,7 +276,6 @@ and draw window cl st =
     | Lord -> "images/LordCard.png"
     | Dragon -> "images/DragonCard.png"
     | WildCard -> "images/WildCard.png"
-    | _ -> failwith ("impossible")
   in
 
   let draw_cards =
@@ -331,8 +330,9 @@ and draw window cl st =
     let _ = GMain.Main.main () in ()
 
 
-let selectPlayers p ai aiD r vbox =
+let selectPlayers p ai aiD r vbox w=
   let _ = vbox#destroy () in
+  let _ = w#destroy () in
   let _ = GMain.Main.quit () in
   match aiD with
   |"e"->r := string_of_int p ^ "/" ^ string_of_int ai ^ "/0/0"
@@ -350,13 +350,13 @@ let selectAIDifficulty p ai r vbox window=
   let vbox1 = GPack.button_box `VERTICAL ~border_width:20 ~child_width:400 ~child_height:120
       ~spacing:20 ~packing:(mainBoard#put ~x:75 ~y:200)() in
   let p0 = GButton.button ~label:"Easy" ~packing:vbox1#add () in
-  let _ = p0#connect#clicked ~callback: (fun () -> selectPlayers p ai "e" r main_vbox) in
+  let _ = p0#connect#clicked ~callback: (fun () -> selectPlayers p ai "e" r main_vbox window) in
   p0#misc#set_name ("p0");
   let p1 = GButton.button ~label:"Medium" ~packing:vbox1#add () in
-  let _ = p1#connect#clicked ~callback: (fun () -> selectPlayers p ai "m" r main_vbox) in
+  let _ = p1#connect#clicked ~callback: (fun () -> selectPlayers p ai "m" r main_vbox window) in
   p1#misc#set_name ("p0");
   let p2 = GButton.button ~label:"Hard" ~packing:vbox1#add () in
-  let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers p ai "h" r main_vbox) in
+  let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers p ai "h" r main_vbox window) in
   p2#misc#set_name ("p0");
   ()
 
@@ -413,7 +413,7 @@ let selectHumanPlayers num r vbox window =
     let _ = i2#connect#clicked ~callback: (fun () -> ()) in ()
   | 2 ->
     let p2 = GButton.button ~label:"0 AI Players" ~packing:vbox1#add () in
-    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 2 0 "" r main_vbox) in
+    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 2 0 "" r main_vbox window) in
     p2#misc#set_name ("p0");
     let p3 = GButton.button ~label:"1 AI Player" ~packing:vbox2#add () in
     let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 2 1 r main_vbox window) in
@@ -433,7 +433,7 @@ let selectHumanPlayers num r vbox window =
     ()
   | 3 ->
     let p2 = GButton.button ~label:"0 AI Players" ~packing:vbox1#add () in
-    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 3 0 "" r main_vbox) in
+    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 3 0 "" r main_vbox window) in
     p2#misc#set_name ("p0");
     let p3 = GButton.button ~label:"1 AI Player" ~packing:vbox2#add () in
     let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 3 1 r main_vbox window) in
@@ -453,7 +453,7 @@ let selectHumanPlayers num r vbox window =
      ()
   | 4 ->
     let p2 = GButton.button ~label:"0 AI Players" ~packing:vbox1#add () in
-    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 4 0 "" r main_vbox) in
+    let _ = p2#connect#clicked ~callback: (fun () -> selectPlayers 4 0 "" r main_vbox window) in
     p2#misc#set_name ("p0");
     let p3 = GButton.button ~label:"1 AI Player" ~packing:vbox2#add () in
     let _ = p3#connect#clicked ~callback: (fun () -> selectAIDifficulty 4 1 r main_vbox window) in
@@ -501,7 +501,7 @@ let init_gui () =
   let _ = p4#connect#clicked ~callback: (fun () -> selectHumanPlayers 4 r main_vbox window) in
   p4#misc#set_name ("p0");
   let p5 = GButton.button ~label:"5 Human Players" ~packing:vbox2#add () in
-  let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 5 0 "" r main_vbox) in
+  let _ =p5#connect#clicked ~callback: (fun () -> selectPlayers 5 0 "" r main_vbox window) in
   p5#misc#set_name ("p0");
   let _ = window#show () in
   (* Enter the event loop *)

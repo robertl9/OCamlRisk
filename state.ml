@@ -228,7 +228,7 @@ let init_state p eAI mAI hAI j =
   let continents = j|> member "continents" |> to_list |> List.map to_continents in
   let countries = j|> member "countries" |> to_list |> List.map to_countries in
   let u_countries = let f x = (String.uppercase_ascii x.country_id) in List.map f countries in
-  let repl_msg = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!" in
+  let repl_msg = "Welcome to Risk! Your\ngame creators are Milan\nShah, Jonvi Rollins, Robert\nLi, and Abdullah Islam!" in
   let fog_of_war = j |> member "fog_of_war" |> to_string in
   let win = j|> member "win_message" |> to_string in
   let orderl = order (p+eAI+mAI+hAI) p eAI mAI hAI in
@@ -382,7 +382,7 @@ let inc_troop n c st =
     if List.mem_assoc c player.countries_held
     then
       let _ = player.countries_held <- (inc c player.countries_held) in
-      st.repl_msg <- c ^ " has gained" ^ (string_of_int n) ^ " troop!"
+      st.repl_msg <- c ^ " has gained\n" ^ (string_of_int n) ^ " troop!"
     else st.repl_msg <- st.c_turn ^ " does not own this country!" in
   let _ = st.players_list <- (player::pl) in st
 
@@ -715,11 +715,11 @@ let getPhase st =
 
 let getPhaseString st =
   match st.c_phase with
-    | SetUp -> "SetUp!"
+    | SetUp -> "Current Phase: SetUp!"
     | Game x -> match x with
-      | Deploy -> "Deploy!"
-      | Attack -> "Attack!"
-      | Reinforce -> "Reinforce!"
+      | Deploy -> "Current Phase: Deploy!"
+      | Attack -> "Current Phase: Attack!"
+      | Reinforce -> "Current Phase: Reinforce!"
 
 (* [string_of_dict d s] returns string of dict elements
  * requires: d is an association list
