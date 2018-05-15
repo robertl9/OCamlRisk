@@ -33,9 +33,9 @@ let rec action cl box w st =
         | Reinforce ->
         if List.length cl = 1 then draw w cl st
         else let plyr = get_cplayer st in
-          let fst_ctry = get_country_id (List.hd(List.rev cl)) in
-          let num_troops = get_troops fst_ctry plyr in
-          let st' = do' (ReinforceC ((num_troops-1), List.hd (List.rev cl), List.hd cl)) st in draw w [] st'
+          (* let fst_ctry = get_country_id (List.hd(List.rev cl)) in
+          let num_troops = get_troops fst_ctry plyr in *)
+          let st' = do' (ReinforceC (1, List.hd (List.rev cl), List.hd cl)) st in draw w [] st'
 and aiAction box w st =
   let _ = print_string "ai actioning\n" in
   let _ = box#destroy () in

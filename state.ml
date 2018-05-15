@@ -246,9 +246,19 @@ let pick_country c st =
     let _ = st.players_list <- (player::pl) in st
   else let _ = st.repl_msg <- "Invalid Country/Country Taken" in st
 
-let get_country str_country state =
-  List.find (fun x -> String.uppercase_ascii x.country_id = String.uppercase_ascii str_country) state.countries
+let get_player_id pl =
+  pl.id
 
+let rec get_country str_country lst =
+  match lst with
+  | [] -> failwith "Country not found"
+  | h::t -> if String.uppercase_ascii h.country_id = 
+    String.uppercase_ascii str_country then h else get_country str_country t
+
+let get_conts_on player st= 
+  List.map (fun x -> (String.lowercase_ascii x.c_id)) 
+  (List.map (fun x -> get_country (fst x) st) player.countries_held)
+  
 let rec get_defender c pl npl =
   let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then true else x || false in
   match pl with
@@ -262,8 +272,27 @@ let roll n =
   for i = 0 to n-1 do rl.(i)<-(Random.int 5 + 1) done; rl
 
 let get_troops c p =
-  let f x (k,v) = if c = k then v else x + 0 in
+  let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then v else x + 0 in
   List.fold_left f 0 p.countries_held
+
+
+let find_owner c st = 
+  let c_held_lists = List.flatten (List.map (fun x -> (x.countries_held)) st.players_list) in 
+  let rec get_p tup lst = 
+    match lst with 
+    | [] -> failwith "Country not owned by a player, not possible outside of SetUp"
+    | h::t -> if List.mem tup h.countries_held then h else get_p tup t in
+  let rec make_lst assocs = 
+    match assocs with 
+    | [] -> []
+    | (k,v)::t -> ((get_p (k,v) st.players_list), k, v)::(make_lst t) in 
+  (*list of (player, country name, num troops*)
+  let lst = make_lst c_held_lists in 
+  let rec find_p lst = 
+    match lst with
+    | [] -> failwith "Invalid country, no owner found"
+    | (p,k,v)::t -> if String.uppercase_ascii k = String.uppercase_ascii c then p else find_p t in
+  find_p lst 
 
 let calc_troops player =
   if player.deploy = 0 then

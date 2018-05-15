@@ -112,10 +112,19 @@ val get_msg: state -> string
 
 val init_state: int -> int -> int -> int -> Yojson.Basic.json -> state
 
-val get_country:string -> state -> country
+val get_country: string -> country list -> country
 
 val country_owned_by_player: state -> string -> string
 
 val get_win_msg: state -> string
 
-val get_troops: country -> player -> int 
+val get_player_by_id: state -> string -> player
+
+val get_troops: string -> player -> int
+
+val get_conts_on: player -> country list -> string list
+
+val find_owner: string -> state -> player
+
+val reinforcable: string ->string ->
+           country list -> country list -> country list -> state -> bool
