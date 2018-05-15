@@ -1,5 +1,4 @@
 
-
 (* [state] is an abstract type representing the state of the Risk game*)
 type state
 
@@ -12,6 +11,7 @@ type player
 (* [card] is an abstract type representing a card in the game*)
 type card = BannerMan | Lord | Dragon | WildCard
 
+(* [continent] is an abstract type representing a contient within the game*)
 type continent
 
 (* [t_phase] is an abstract type representing the phase during the game portion*)
@@ -30,45 +30,36 @@ val taken_by: state -> player -> string list
 *)
 val available: state -> string list
 
-(* [continents] list of continent names*)
-(* val continents: state -> string list *)
-
-(* [countries] list of country names*)
-(* val countries: state -> string list *)
-
 (* [exits c] returns a list of the names of countries that neighbor c *)
 val exits: country -> string list
 
-(* [num_troops s p] *)
-(* val num_troops: state -> int *)
 
-(* [turns_by p] is a number representing the number of turns taken by a player.
- * A turn consists of three stages: p deploying their troops, p declaring an attack
- * on a country held by another player, and p reinforcing their troops
-*)
-(* val turns_by: player -> int *)
-
-(* [win s] returns a state in which the player who owns all of the
- * countries in the state wins the game. If no such player exists, the
- * same state is returned.
-*)
+(* [win s] returns a boolean singaling if someone has won the game or not*)
 val win: state -> bool
 
 (* [cards_owned p] returns a list of cards representing cards owned by p*)
 val cards_owned: player -> card list
 
+(* [get_unclaimed st] returns a string list of the unclaimed countries*)
 val get_unclaimed: state -> string list
 
+(* [get_neighbors ct] returns a string list of the neighboring countries to ct*)
 val get_neighbors: country -> string list
 
+(* [get_num_deploy pl] returns the number of troops pl should be able to deploy*)
 val get_num_deploy: player -> int
 
+(* [get_player_countries pl] returns a list of the countries the player owns and
+the number of troops on each country*)
 val get_player_countries: player -> (string * int) list
 
+(* [get_country_id ct] returns the id of a country given a country ct*)
 val get_country_id: country -> string
 
+(* [get_player_list st] returns a list of active players in the given state st*)
 val get_player_list: state -> player list
 
+(* [get_country_content st] gives the continetn a country is in*)
 val get_country_content: country -> string
 
 (* [getPhase st] returns the current phase
@@ -81,8 +72,10 @@ val getPhase: state -> phase
 *)
 val getPhaseString: state -> string
 
+(* [get_continent_id ct] returns the id of a continent*)
 val get_continent_id: continent -> string
 
+(* [get_continents pl] returns a list of the contients a player owns*)
 val get_continents: player -> continent list
 
 (* [getCountryTroops st] returns association list of country id and troops
@@ -100,6 +93,7 @@ val getAttackDice: state -> int list
 *)
 val getDefendDice: state -> int list
 
+(* [get_countries st] returns the list of countries in the state*)
 val get_countries: state -> country list
 
 (* [printOrder st] returns string or the players order
@@ -107,12 +101,9 @@ val get_countries: state -> country list
 *)
 val printOrder: state -> string
 
+(* [calc_troops pl] returns the the number of troops a player should get*)
 val calc_troops: player -> int
 
-(* [remove_card s c] returns a state that has a
- * a card list that does not contain c
-*)
-(* val remove_card: state -> card -> state *)
 
 (* [cards_free s] returns a list of cards not held by any player
 *)
@@ -159,6 +150,8 @@ val get_msg: state -> string
 *)
 val init_state: int -> int -> int -> int -> Yojson.Basic.json -> state
 
+(* [get_country] takes in a string representing a country id and list of countries
+   and returns the corresponding contry object*)
 val get_country: string -> country list -> country
 
 val country_owned_by_player: state -> string -> string
@@ -202,4 +195,4 @@ val reinforcable: string ->string ->
 
 val get_bonus_troops: state -> int
 
-val get_deploy: player -> int 
+val get_deploy: player -> int

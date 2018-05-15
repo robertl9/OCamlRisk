@@ -58,13 +58,15 @@ type state = {
   mutable card_bonus: int;
   w_msg: string;
 }
-
+(*Spec In mli file for state*)
 let get_all_continents st =
   st.continents
 
+(*Spec In mli file for state*)
 let get_countries st =
   st.countries
 
+(*Spec In mli file for state*)
 let get_cont_countries c =
   c.country_list
 
@@ -90,32 +92,41 @@ let getAttackDice st =
 let getDefendDice st =
   st.defendDice
 
+(*Spec In mli file for state*)
 let get_continent_id cont =
   cont.continent_id
 
+(*Spec In mli file for state*)
 let get_country_content ct =
   ct.c_id
 
+(*Spec In mli file for state*)
 let get_player_list st =
   st.players_list
 
+(*Spec In mli file for state*)
 let get_country_id ct =
   ct.country_id
 
+(*Spec In mli file for state*)
 let get_num_deploy pl =
   pl.deploy
 
+(*Spec In mli file for state*)
 let get_player_countries pl =
   pl.countries_held
 
+(*Spec In mli file for state*)
 let get_neighbors ct =
   ct.neighbors
 
+(*Spec In mli file for state*)
 let get_unclaimed st =
   st.unclaimed
 
 let init_troops = 30
 
+(*Spec In mli file for state*)
 let get_msg st =
   st.repl_msg
 
@@ -228,7 +239,7 @@ let init_state p eAI mAI hAI j =
   let continents = j|> member "continents" |> to_list |> List.map to_continents in
   let countries = j|> member "countries" |> to_list |> List.map to_countries in
   let u_countries = let f x = (String.uppercase_ascii x.country_id) in List.map f countries in
-  let repl_msg = "Welcome to Risk! Your\ngame creators are Milan\nShah, Jonvi Rollins, Robert\nLi, and Abdullah Islam!" in
+  let repl_msg = "Welcome to Risk! Your game creators are Milan Shah, Jonvi Rollins, Robert Li, and Abdullah Islam!" in
   let fog_of_war = j |> member "fog_of_war" |> to_string in
   let win = j|> member "win_message" |> to_string in
   let orderl = order (p+eAI+mAI+hAI) p eAI mAI hAI in
@@ -250,6 +261,7 @@ let rec get_player p pl npl =
   | [] -> failwith "Invalid Player"
   | h::t -> if h.id = p then h, t@npl else get_player p t (h::npl)
 
+(*Spec In mli file for state*)
 let get_cplayer st =
   st.c_turn
 
@@ -299,15 +311,18 @@ let pick_country c st =
     let _ = st.players_list <- (player::pl) in st
   else let _ = st.repl_msg <- "Invalid Country/Country Taken" in st
 
+(*Spec In mli file for state*)
 let get_player_id pl =
   pl.id
 
+(*Spec In mli file for state*)
 let rec get_country str_country lst =
   match lst with
   | [] -> failwith "Country not found"
   | h::t -> if String.uppercase_ascii h.country_id =
     String.uppercase_ascii str_country then h else get_country str_country t
 
+(*Spec In mli file for state*)
 let get_conts_on player st=
   List.map (fun x -> (String.lowercase_ascii x.c_id))
   (List.map (fun x -> get_country (fst x) st) player.countries_held)
@@ -334,10 +349,12 @@ let roll n =
   let rl = Array.make n 0 in
   for i = 0 to n-1 do rl.(i)<-(Random.int 5 + 1) done; rl
 
+(*Spec In mli file for state*)
 let get_troops c p =
   let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then v else x + 0 in
   List.fold_left f 0 p.countries_held
 
+(*Spec In mli file for state*)
 let find_owner c st =
   let c_held_lists = List.flatten (List.map (fun x -> (x.countries_held)) st.players_list) in
   let rec get_p tup lst =
@@ -356,6 +373,7 @@ let find_owner c st =
     | (p,k,v)::t -> if String.uppercase_ascii k = String.uppercase_ascii c then p else find_p t in
   find_p lst
 
+(*Spec In mli file for state*)
 let calc_troops player =
   if player.deploy = 0 then
     (if ((List.length player.countries_held)/3 <= 3)
@@ -661,6 +679,7 @@ let attack c c2 st =
             let _ = st''.repl_msg <- "1and1" in st''            (* Decerement Attack Troop *)
       | _, _ -> (let _ = st.repl_msg <- "Invalid Rolls" in st)
 
+(*Spec In mli file for state*)
 let rec reinforcable current_c dest neighbors cl visited st =
   match neighbors with
   | [] -> false
@@ -712,9 +731,11 @@ let quit_helper st =
   let _ = st.players_list <- List.filter (fun x -> x != player) st.players_list
   in st
 
+(*Spec In mli file for state*)
 let getPhase st =
   st.c_phase
 
+(*Spec In mli file for state*)
 let getPhaseString st =
   match st.c_phase with
     | SetUp -> "Current Phase: SetUp!"
@@ -753,6 +774,7 @@ let rec string_of_continent l s =
   | [] -> s
   | h::t -> string_of_continent t (s^(h.continent_id)^"\n")
 
+(*Spec In mli file for state*)
 let print_state st =
   let s = ref "Players are:" in
   for i = 0 to (Array.length st.turns)-1 do s := !s ^ " " ^ (st.turns.(i)) done;
@@ -901,15 +923,19 @@ let do' cmd st =
             let _ = st.repl_msg <- "EndPhase now deploy" in st
           | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st))
 
+(*Spec In mli file for state*)
 let taken_by state plyr =
   List.map (fun (a,_) -> a) plyr.countries_held
 
+(*Spec In mli file for state*)
 let available state =
   state.unclaimed
 
+(*Spec In mli file for state*)
 let exits cntry =
   cntry.neighbors
 
+(*Spec In mli file for state*)
 let win state =
   let plyrs = state.players_list in
   let total_countries = List.length state.countries in
@@ -920,10 +946,13 @@ let win state =
       else helper t
   in helper plyrs
 
+(*Spec In mli file for state*)
 let cards_owned plyr = plyr.cards
 
+(*Spec In mli file for state*)
 let cards_free state = state.card_l
 
+(*Spec In mli file for state*)
 let get_player_by_id s id =
   let _ = print_string "rob's fault" in
   let rec helper plyrs =
@@ -939,6 +968,7 @@ let rec iterate_through_countries lst id =
   | h::t -> if h = id then true
     else iterate_through_countries t id
 
+(*Spec In mli file for state*)
 let country_owned_by_player s country_id =
   let rec helper plyrs =
     match plyrs with
@@ -948,11 +978,14 @@ let country_owned_by_player s country_id =
       then h.id else helper t
   in helper s.players_list
 
+(*Spec In mli file for state*)
 let get_win_msg s =
   s.w_msg
 
+(*Spec In mli file for state*)
 let get_bonus_troops s =
   s.card_bonus
 
+(*Spec In mli file for state*)
 let get_deploy plyr =
   plyr.deploy

@@ -62,7 +62,9 @@ and draw window cl st =
   let gameBoard = GPack.fixed ~packing:main_hbox#add () in
   let _ = GMisc.image ~file: "images/riskmap.png" ~packing:(gameBoard#put ~x:0 ~y:0) () in
   let _ = GMisc.label ~text:(get_cplayer st) ~packing:(gameBoard#put ~x:1090 ~y:15) () in
-  let _ = GMisc.label ~text:((get_msg st)^"\n"^(getPhaseString st)^"\n\n"^"Order of Players is:\n"^(printOrder st)) ~packing:(gameBoard#put ~x:1025 ~y:525) () in
+  let comments = GMisc.label ~width:155 ~text:((get_msg st)^"\n"^(getPhaseString st)
+  ^"\n\n"^"Order of Players is:\n"^(printOrder st)) ~packing:(gameBoard#put ~x:1025 ~y:522) () in
+  comments#set_line_wrap true ;
   let txt = string_of_int (get_bonus_troops st) in
   let _ = GMisc.label ~text:("Next card bonus: " ^ txt)
       ~packing:(gameBoard#put ~x:800 ~y:35) () in
