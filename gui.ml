@@ -263,6 +263,25 @@ and draw window cl st =
        | _ -> "0")
       ~packing:(gameBoard#put ~x: 538 ~y:265) () in
 
+  let image_match card =
+    match card with
+    | BannerMan -> "images/BannerCard.png"
+    | Lord -> "images/LordCard.png"
+    | Dragon -> "images/DragonCard.png"
+    | WildCard -> "images/WildCard.png"
+    | _ -> failwith ("impossible")
+  in
+
+  let draw_cards =
+    let curr_player = get_player_of_state st in
+    let card_lst = (cards_owned curr_player) in
+    for i = 0 to List.length (cards_owned curr_player) - 1
+    do let img = image_match (List.nth card_lst i) in
+      let xcoord = 60 + i * 100 in
+      let _ = GMisc.image ~file:img ~packing:(gameBoard#put ~x:xcoord ~y: 590) () in ()
+    done
+  in let _ = draw_cards in
+
   let aDice =
     match getAttackDice st with
     | [] ->
