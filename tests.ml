@@ -342,7 +342,7 @@ let full_tests = [
   "deploy20" >:: (fun _ -> assert_equal () (full1:= (do' (DeployC(1,"Highgarden")) !full1)));
   "deployc20" >:: (fun _ -> assert_equal 3 (get_troops "Highgarden" (get_player_by_id !full1 "5")));
   (*End test cases to ensure that deploying works properly for human players*)
-  
+
 
 
 ]
@@ -499,6 +499,7 @@ let full_tests_AI = [
   "aecp21" >:: (fun _ -> assert_equal 4 (List.length (get_player_countries (get_player_by_id !full1 "ae5"))));
   "aecorrectPlayer21" >:: (fun _ -> assert_equal "ae1" (get_cplayer !full1));
   "aecpc21" >:: (fun _ -> assert_equal 4 (List.length (get_player_countries (get_player_of_state !full1))));
+
 ]
 
 

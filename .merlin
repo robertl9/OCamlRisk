@@ -3,7 +3,3 @@ PKG yojson
 PKG lablgtk2
 PKG oUnit2
 PKG ANSITerminal
-PKG Camlimages
-PKG graphics
-PKG Camlimages.png
-PKG Camlimages.jpeg
