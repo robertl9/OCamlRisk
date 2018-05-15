@@ -551,21 +551,67 @@ let print_state st =
       | Reinforce -> "Reinforce!" in
   s := !s ^ "Current Phase is " ^ s'; !s
 
-let check_cards (c1:string) (c2:string) (c3:string) =
-  match c1, c2, c3 with
-  | "wildcard", b, c -> if b = c || b <> c then true else false
-  | a, "wildcard", c -> if a = c || a <> c then true else false
-  | a, b, "wildcard" -> if a = b || a <> b then true else false
-  | _ -> if ((c1 = c2) && (c1 = c3) && (c2 = c3)) || ((c1 <> c2) && (c1 <> c3) && (c2 <> c3))
-    then true else false
+let rec count_cards lst card card_acc wild_acc =
+  match lst with
+  | [] -> if card_acc + wild_acc >= 3 then (true, card_acc, wild_acc)
+    else (false, card_acc, wild_acc)
+  | h::t -> if h = card then count_cards t card (1+card_acc) wild_acc
+    else if h = WildCard then count_cards t card card_acc (1+wild_acc)
+    else count_cards t card card_acc wild_acc
 
-let parse_cards str =
-  match str with
-  | "bannerman" -> BannerMan
-  | "lord" -> Lord
-  | "dragon" -> Dragon
-  | "wildcard" -> WildCard
-  | _ -> failwith ("Impossible!")
+let rec remove_elem elem lst =
+  match lst with
+  | [] -> []
+  | h::t -> if h = elem then t
+    else h::(remove_elem elem t)
+
+let helper card1 card2 card3 st  =
+  let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
+  let plyr, nonplyrs = get_player c_turn_after st.players_list [] in
+  let bonus = st.card_bonus in
+  let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
+  let new_lst = remove_elem card3(remove_elem card2(remove_elem card1 plyr.cards)) in
+  let _ = plyr.cards <- new_lst in
+  let _ = plyr.deploy <- (plyr.deploy + bonus) in
+  let _ = st.players_list <- (plyr::nonplyrs) in
+  if st.card_bonus_index < 5
+  then
+    let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
+    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+  else
+    let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
+    let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in st
+
+let rec trade st =
+  let c_turn_after = st.turns.((st.turn+1) mod (Array.length st.turns)) in
+  let plyr, nplyrs = get_player c_turn_after st.players_list [] in
+  if List.length plyr.cards < 3 then st
+  else
+    let (x1,y1,z) = count_cards plyr.cards BannerMan 0 0 in
+    let (x2,y2,_) = count_cards plyr.cards Lord 0 0  in
+    let (x3,y3,_) = count_cards plyr.cards Dragon 0 0  in
+    if x1 then let new_st =
+                 helper BannerMan BannerMan BannerMan st in trade new_st
+    else if x2 then let new_st =
+                 helper Lord Lord Lord st in trade new_st
+    else if x3 then let new_st =
+                      helper Dragon Dragon Dragon st in trade new_st
+    else if z = 0 && (y1 > 0 && y2 > 0 && y3 > 0) then let new_st =
+                      helper BannerMan Dragon Lord st in trade new_st
+    else if z > 0 && (y1 >= 2) then let new_st =
+                      helper BannerMan BannerMan WildCard st in trade new_st
+    else if z > 0 && (y2 >= 2) then let new_st =
+                      helper Lord Lord WildCard st in trade new_st
+    else if z > 0 && (y3 >= 2) then let new_st =
+                      helper Dragon Dragon WildCard st in trade new_st
+    else if z > 0 && (y1 = 1 && y2 = 1 && y3 = 0) then let new_st =
+                      helper BannerMan Lord WildCard st in trade new_st
+    else if z > 0 && (y1 = 1 && y2 = 0 && y3 = 1) then let new_st =
+                      helper BannerMan Dragon WildCard st in trade new_st
+    else if z > 0 && (y1 = 0 && y2 = 1 && y3 = 1) then let new_st =
+                      helper Lord Dragon WildCard st in trade new_st
+    else st
+
 
 (*changes the game state based on the GUI input*)
 let do' cmd st =
@@ -596,30 +642,6 @@ let do' cmd st =
       | _ -> let _ = st.repl_msg <- "Command Currently Unavailable" in st)
   | Game x -> (match x with
       | Deploy -> (match cmd with
-          | TradeC (c1, c2, c3) ->
-            if (check_cards c1 c2 c3) <> true
-            then
-              let _ = st.repl_msg <- "Can't exchange cards!" in st
-            else
-              let bonus = st.card_bonus in
-              let plyr, nonplyrs = get_player st.c_turn st.players_list [] in
-              let _ = st.repl_msg <- "" ^ string_of_int (bonus) ^ "troops gained!" in
-              let card1 = parse_cards c1 in
-              let card2 = parse_cards c2 in
-              let card3 = parse_cards c3 in
-              let new_lst = remove_l card3(remove_l card2(remove_l card1 plyr.cards)) in
-              let _ = plyr.cards <- new_lst in
-              let _ = plyr.deploy <- (plyr.deploy + bonus) in
-              let _ = st.players_list <- (plyr::nonplyrs) in
-              if st.card_bonus_index < 5
-              then
-                let _ = st.card_bonus <- (List.nth troop_bonus_list (st.card_bonus_index + 1)) in
-                let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in
-                let _ = st.c_phase <- Game (Deploy) in st
-              else
-                let _ = st.card_bonus <- (15 + (st.card_bonus_index+1 - 5) * 5) in
-                let _ = st.card_bonus_index <- (st.card_bonus_index + 1) in
-                let _ = st.c_phase <- Game (Deploy) in st
           | DeployC (n,c) ->
             (let player, pl = get_defender (String.uppercase_ascii c) st.players_list [] in
              if player.deploy = 0
@@ -665,6 +687,7 @@ let do' cmd st =
             let _ = st'.c_turn <- st'.turns.(st'.turn mod (Array.length st'.turns)) in
             let _  = st'.c_phase <- Game (Deploy) in st'
           | EndPhaseC ->
+            let _ = trade st in
             let _ = st.turn <- st.turn + 1 in
             let _ = st.c_turn <- st.turns.(st.turn mod (Array.length st.turns)) in
             let _  = st.c_phase <- Game (Deploy) in
