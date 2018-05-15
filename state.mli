@@ -14,8 +14,10 @@ type card = BannerMan | Lord | Dragon | WildCard
 
 type continent
 
+(* [t_phase] is an abstract type representing the phase during the game portion*)
 type t_phase = Deploy | Attack | Reinforce
 
+(* [phase] is an abstract type representing the phase in a game*)
 type phase = SetUp | Game of t_phase
 
 (* [taken s p] returns a list representing the countries in s
@@ -69,22 +71,40 @@ val get_player_list: state -> player list
 
 val get_country_content: country -> string
 
+(* [getPhase st] returns the current phase
+ * requires: st is a state
+*)
 val getPhase: state -> phase
 
+(* [getPhaseString st] returns the current phase as a string
+ * requires: st is a state
+*)
 val getPhaseString: state -> string
 
 val get_continent_id: continent -> string
 
 val get_continents: player -> continent list
 
+(* [getCountryTroops st] returns association list of country id and troops
+ * requires: st is a state
+*)
 val getCountryTroops: state -> (string * int) list
 
+(* [getAttackDice st] returns a list of numbers rolled on attack dice
+ * requires: st is a state
+*)
 val getAttackDice: state -> int list
 
+(* [getDefendDice st] returns a list of numbers rolled on defend dice
+ * requires: st is a state
+*)
 val getDefendDice: state -> int list
 
 val get_countries: state -> country list
 
+(* [printOrder st] returns string or the players order
+ * requires: st is a state
+*)
 val printOrder: state -> string
 
 val calc_troops: player -> int
@@ -98,35 +118,80 @@ val calc_troops: player -> int
 *)
 val cards_free: state -> card array
 
+(* [get_cplayer s] returns the string id of the current player
+ * requires: s is a state
+*)
 val get_cplayer: state -> string
 
+(* [get_player_of_state s] returns the player record of the current player
+ * requires: s is a state
+*)
 val get_player_of_state: state -> player
 
+(* [get_player_by_id s p] returns the player record associated with the id p
+ * requires: s is a state
+             p is a string
+*)
 val get_player_by_id: state -> string -> player
 
+(* [print_state s] returns a string of various information to print
+ * requires: s is a state
+*)
 val print_state: state -> string
 
+(* [do' cmd s] returns a new state after executing actions associated with cmd
+ * requires: cmd is a Command.command
+             s is a state
+*)
 val do': Command.command -> state -> state
 
+(* [get_msg s] returns the msg in the record s
+ * requires: s is a state
+*)
 val get_msg: state -> string
 
+(* [init_state p aie aim aih json] returns an initialized state
+ * requires: p is an int of human players
+             aie is an int of easy ai players
+             aim is an int of medium ai players
+             aih is an int of hard ai players
+             json is a valid json
+*)
 val init_state: int -> int -> int -> int -> Yojson.Basic.json -> state
 
 val get_country: string -> country list -> country
 
 val country_owned_by_player: state -> string -> string
 
+(* [get_win_msg s] returns the win message in the record s
+ * requires: s is a state
+*)
 val get_win_msg: state -> string
 
 val get_player_by_id: state -> string -> player
 
+(* [get_player_id p] returns id associated with player p
+ * requires: p is a player
+*)
 val get_player_id:  player -> string
 
+(* [get_troops s p] returns num troops in country id s owned by player p
+ * requires: s is a string representing a country id
+             p is a player
+*)
 val get_troops: string -> player -> int
 
 val get_conts_on: player -> country list -> string list
 
 val find_owner: string -> state -> player
 
+(* [reinforcable c1 c2 neighbors cl st] returns boolean if c1 and c2 are
+                                         connected by a path owned by the player
+ * requires: st is a state
+             c1 is a country id
+             c2 is a country id
+             neighbors is a country list
+             cl is a country list
+*)
 val reinforcable: string ->string ->
            country list -> country list -> country list -> state -> bool

@@ -39,7 +39,6 @@ let troop_bonus_list= [4;6;8;10;12;15]
 let get_continents pl =
   pl.continents
 
-
 type state = {
   mutable players_list: player list;
   mutable c_turn: string;
@@ -59,13 +58,13 @@ type state = {
   w_msg: string;
 }
 
-(* num of initial amount of troops allowed on board
- * subject to change
-*)
 
 let get_countries st =
   st.countries
 
+(* [getCountryTroops st] returns association list of country id and troops
+ * requires: st is a state
+*)
 let getCountryTroops st =
   let rec append pl l =
     match pl with
@@ -73,9 +72,15 @@ let getCountryTroops st =
     | h::t -> append t (h.countries_held@l) in
   append st.players_list []
 
+(* [getAttackDice st] returns a list of numbers rolled on attack dice
+ * requires: st is a state
+*)
 let getAttackDice st =
   st.attackDice
 
+(* [getDefendDice st] returns a list of numbers rolled on defend dice
+ * requires: st is a state
+*)
 let getDefendDice st =
   st.defendDice
 
@@ -150,6 +155,10 @@ let to_countries a =
   let cont_id = a |> member "continent" |> to_string in
   {country_id = id; neighbors = neighbor_lst; c_id = cont_id}
 
+(* [players n l] returns n human players in a list
+ * requires: n is an int
+             l is a players list
+*)
 let rec players n l =
   if n == 0 then l
   else let player = {id = string_of_int n; character = JonSnow; deploy = 0;
@@ -157,6 +166,11 @@ let rec players n l =
     let npl = player::l in
     players (n-1) npl
 
+(* [aiE p n l] returns n easy ai players in a list
+ * requires: p is an int
+             n is an int
+             l is a players list
+*)
 let rec aiE p n l =
   if n == 0 then l
   else let player = {id = "ae"^string_of_int (p+n); character = JonSnow; deploy = 0;
@@ -164,6 +178,11 @@ let rec aiE p n l =
     let npl = player::l in
     aiE p (n-1) npl
 
+(* [aiM p n l] returns n medium ai players in a list
+ * requires: p is an int
+             n is an int
+             l is a players list
+*)
 let rec aiM p n l =
   if n == 0 then l
   else let player = {id = "am"^string_of_int (p+n); character = JonSnow; deploy = 0;
@@ -173,6 +192,11 @@ let rec aiM p n l =
     let npl = player::l in
     aiM p (n-1) npl
 
+(* [aiH p n l] returns n hard ai players in a list
+ * requires: p is an int
+             n is an int
+             l is a players list
+*)
 let rec aiH p n l =
   if n == 0 then l
   else let player = {id = "ah"^string_of_int (p+n); character = JonSnow; deploy = 0;
@@ -180,6 +204,13 @@ let rec aiH p n l =
     let npl = player::l in
     aiH p (n-1) npl
 
+(* [order n p eAI mAI hAI] returns an array of the order of players
+ * requires: p is an int
+             n is an int
+             eAi is an int
+             mAi is an int
+             hAi is an int
+*)
 let order n p eAI mAI hAI =
   let ol = Array.make n "" in
   for i = 0 to p-1 do ol.(i)<-(string_of_int (i+1)) done;
@@ -202,11 +233,12 @@ let init_state p eAI mAI hAI j =
    fog_of_war = fog_of_war; w_msg = win; repl_msg = repl_msg;
    card_bonus = 4; card_bonus_index = 0}
 
-let add_player id character st =
-  let player = {id = id; character = character; deploy = 0; continents = [];
-                countries_held = []; cards = []; flag = false} in
-  let _ = st.players_list <- player::st.players_list in st
-
+(* [get_player p pl npl] returns a tuple of player associated with id p and
+                         list of remaining players
+ * requires: p is a player id
+             pl is a players list
+             npl is a players list
+*)
 let rec get_player p pl npl =
   match pl with
   | [] -> failwith "Invalid Player"
@@ -215,11 +247,21 @@ let rec get_player p pl npl =
 let get_cplayer st =
   st.c_turn
 
+(* [remove_l c l] returns an 'a list with c removed from l
+ * requires: c is an 'a'
+             l is an 'a list
+*)
 let rec remove_l c l =
   match l with
   | [] -> l
   | h::t -> if (h = c) then t else h::(remove_l c t)
 
+(* [conq_continent countryl continentl cl] returns a continent list of the continents
+                                     the player owns
+ * requires: countryl is a coutry list
+             continentl is a continent list
+             cl is a continent list
+*)
 let rec conq_continent countryl continentl cl =
   match continentl with
   | [] -> cl
@@ -233,6 +275,11 @@ let rec conq_continent countryl continentl cl =
         else conq_continent countryl t cl in
     contains_all h.country_list
 
+(* [pick_country c st] returns a state with country c claimed
+ * requires: c is an country id
+             st is a state
+ * raise: "Invalid Country/Country Taken" if country does not exist
+*)
 let pick_country c st =
   if (List.mem c st.unclaimed) then
     let player, pl = get_player st.c_turn st.players_list [] in
@@ -259,6 +306,13 @@ let get_conts_on player st=
   List.map (fun x -> (String.lowercase_ascii x.c_id))
   (List.map (fun x -> get_country (fst x) st) player.countries_held)
 
+(* [get_defender c pl npl] returns a tuple of player owning country c and
+                           remaining players list
+ * requires: c is an country id
+             pl is a players list
+             npl is a players list
+ * raise: "Invalid Country" if country does not exist
+*)
 let rec get_defender c pl npl =
   let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then true else x || false in
   match pl with
@@ -267,6 +321,9 @@ let rec get_defender c pl npl =
   | h::t -> let boolean = List.fold_left f false h.countries_held in
     if boolean then h, t@npl else get_defender c t (h::npl)
 
+(* [roll n] returns an array with n randonly generated ints
+ * requires: n is an int
+*)
 let roll n =
   let rl = Array.make n 0 in
   for i = 0 to n-1 do rl.(i)<-(Random.int 5 + 1) done; rl
@@ -274,7 +331,6 @@ let roll n =
 let get_troops c p =
   let f x (k,v) = if String.uppercase_ascii c = String.uppercase_ascii k then v else x + 0 in
   List.fold_left f 0 p.countries_held
-
 
 let find_owner c st =
   let c_held_lists = List.flatten (List.map (fun x -> (x.countries_held)) st.players_list) in
@@ -305,6 +361,11 @@ let calc_troops player =
 let sum_troops p =
   List.fold_left (+) 0 (List.map (fun x -> snd x) p.countries_held)
 
+(* [inc_troop n c st] returns a state with country c incremented by n troops
+ * requires: n is an int
+             c is a country id
+             st is a state
+*)
 let inc_troop n c st =
   let player, pl = get_player st.c_turn st.players_list [] in
   let rec inc c cl =
@@ -319,6 +380,11 @@ let inc_troop n c st =
     else st.repl_msg <- st.c_turn ^ " does not own this country!" in
   let _ = st.players_list <- (player::pl) in st
 
+(* [dec_troop n c st] returns a state with country c decremented by n troops
+ * requires: n is an int
+             c is a country id
+             st is a state
+*)
 let dec_troop n c st =
   let player, pl = get_defender c st.players_list [] in
   let rec dec c cl =
@@ -341,6 +407,9 @@ let remove_card arr elem =
   let arr2 = Array.sub arr (index+1) (Array.length arr - 1 - index) in
   Array.append arr1 arr2
 
+(* [draw_card st] returns a state with a card added to the current player
+ * requires: st is a state
+*)
 let draw_card st =
   if Array.length st.card_l > 0 then
     let len = Array.length st.card_l in
@@ -352,21 +421,40 @@ let draw_card st =
     let _ = st.players_list <- (player::pl) in st
   else st
 
+(* [max_e l] returns the max element in the list l
+ * requires: l is a list
+*)
 let rec max_e l =
   match l with
   | [] -> failwith "Invalid Roll"
   | h::[] -> h
   | h::t -> max h (max_e t)
 
+(* [max2_e l] returns the second largest element in the list l
+ * requires: l is a list
+*)
 let rec max2_e l =
   let _ = Array.fast_sort compare l in
   l.(Array.length l - 2)
 
+(* [to_country s cl] returns the country associated with id s
+ * requires: s is a country id
+             cl is a country list
+ * raises: s^" is a Invalid Country!" if s is not a valid country id
+*)
 let rec to_country s cl =
   match cl with
   | [] -> failwith (s^" is a Invalid Country!")
   | h::t -> if String.uppercase_ascii h.country_id = String.uppercase_ascii s then h else to_country s t
 
+(* [conquer a d pl c t st] returns a state where a conquers country c from d
+ * requires: a is a player
+             d is a player
+             pl is a players list
+             c is country id
+             t is sn int
+             st is a state
+*)
 let conquer a d pl c t st =
   let _ = if a.flag = false then
       let _ = draw_card st in
@@ -398,11 +486,21 @@ let conquer a d pl c t st =
     let _ = st.repl_msg <- a.id ^ " has conquered " ^ c ^ "!" in
     let _ = st.players_list <- (a::d::pl) in st
 
+(* [mem c l] returns true if c is l case insensitive
+ * requires: c is a country id
+             l is a country id list
+*)
 let rec mem c l =
   match l with
   | [] -> true
   | h::t -> if String.uppercase_ascii h = c then false else mem c t
 
+(* [attack c c2 st] returns new state with outcome of the attack from c to c2
+ * requires: c is a country id
+             c2 is a country id
+             st is a state
+ * raises: "Invalid Rolls!" if s is not a valid roll
+*)
 let attack c c2 st =
   let attacker, pl = get_defender c st.players_list [] in
   if attacker.id <> st.c_turn
@@ -504,6 +602,12 @@ let rec reinforcable current_c dest neighbors cl visited st =
         reinforcable h.country_id dest new_n cl (h::visited) st || reinforcable current_c dest t cl (h::visited) st
     else reinforcable current_c dest t cl visited st
 
+(* [reinforce n c c2 st] returns new state with n trooops moved from c1 to c2
+ * requires: n is an int
+             c1 is a country id
+             c2 is a country id
+             st is a state
+*)
 let reinforce n c1 c2 st =
   let player, pl = get_player st.c_turn st.players_list [] in
   let cl = (List.map (fun (k,v) -> k) player.countries_held) in
@@ -546,11 +650,19 @@ let getPhaseString st =
       | Attack -> "Attack!"
       | Reinforce -> "Reinforce!"
 
+(* [string_of_dict d s] returns string of dict elements
+ * requires: d is an association list
+             s is a string
+*)
 let rec string_of_dict d s =
   match d with
   | [] -> s
   | (k,v)::t -> string_of_dict t (s ^ (string_of_int v) ^ " troops in "^k^"\n")
 
+(* [string_of_list l s] returns string of list elements
+ * requires: l is an list
+             s is a string
+*)
 let rec string_of_list l s =
   match l with
   | [] -> s
@@ -559,6 +671,10 @@ let rec string_of_list l s =
 let printOrder st =
   string_of_list (Array.to_list st.turns) ""
 
+(* [string_of_continent l s] returns string of continent list
+ * requires: l is a continent list
+             s is a string
+*)
 let rec string_of_continent l s =
   match l with
   | [] -> s
@@ -772,60 +888,3 @@ let country_owned_by_player s country_id =
 
 let get_win_msg s =
   s.w_msg
-
-
-(* [taken s p] returns a list representing the countries in s
- * that are held by a player p
-*)
-(* val taken_by: state -> player -> string list *)
-
-
-(* [available s] is a list of countries
- * that are not taken by a player, on teh board
-*)
-(* val available: state -> string list *)
-
-
-(* [continents] list of continent names*)
-(* val continents: state -> string list *)
-
-
-(* [countries] list of country names*)
-(* val countries: state -> string list *)
-
-
-(* [exits c] returns a list of the names of countries that neighbor c *)
-(* val exits: country -> string list *)
-
-
-(* [num_troops s p] *)
-(* val num_troops: state -> int *)
-
-
-(* [turns_by p] is a number representing the number of turns taken by a player.
- * A turn consists of three stages: p deploying their troops, p declaring an attack
- * on a country held by another player, and p reinforcing their troops
-*)
-(* val turns_by: player -> int *)
-
-
-(* [win s] returns a state in which the player who owns all of the
- * countries in the state wins the game. If no such player exists, the
- * same state is returned.
-*)
-(* val win: state -> state *)
-
-
-(* [cards_owned p] returns a list of strings representing cards owned by p*)
-(* val cards_owned: player -> string list *)
-
-
-(* [remove_card s c] returns a state that has a
- * a card list that does not contain c
-*)
-(* val remove_card: state -> card -> state *)
-
-
-(* [cards_free s] returns a list of cards not held by any player
-*)
-(* val cards_free: state -> string list *)
