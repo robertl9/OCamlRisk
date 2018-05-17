@@ -235,12 +235,20 @@ let rec aiH p n l =
              mAi is an int
              hAi is an int
 *)
+(* 
 let order n p eAI mAI hAI =
   let ol = Array.make n "" in
   for i = 0 to p-1 do ol.(i)<-(string_of_int (i+1)) done;
   for i = p to p+eAI-1 do ol.(i)<-("ae"^string_of_int (i+1)) done;
   for i = p+eAI to p+eAI+mAI-1 do ol.(i)<-("am"^string_of_int (i+1)) done;
   for i = p+eAI+mAI to p+eAI+mAI+hAI-1 do ol.(i)<-("ah"^string_of_int (i+1)) done; ol
+ *)
+let order n p eAI mAI hAI =
+  let ol = Array.make n "" in
+  for i = 0 to hAI-1 do ol.(i)<-("ah"^string_of_int (i+1+p)) done; 
+  for i = hAI to hAI+p-1 do ol.(i)<-(string_of_int (i+1 - hAI)) done;
+  for i = hAI+p to p+hAI+mAI-1 do ol.(i)<-("am"^string_of_int (i+1)) done;
+  for i = hAI+p+mAI to p+eAI+mAI+hAI-1 do ol.(i)<-("ae"^string_of_int (i+1)) done; ol
 
 (*Spec In mli file for state*)
 let init_state p eAI mAI hAI j =
@@ -1022,6 +1030,10 @@ let get_win_msg s =
 (*Spec In mli file for state*)
 let get_bonus_troops s =
   s.card_bonus
+
+(*Spec In mli file for state*)
+let get_cont_bonus ct =
+  ct.bonus_troops
 
 (*Spec In mli file for state*)
 let get_deploy plyr =

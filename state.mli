@@ -200,3 +200,7 @@ val reinforcable: string ->string ->
 (* [get_bonus_troops st] returns an int representing how many troops
    * the next exchange of cards will be worth *)
 val get_bonus_troops: state -> int
+
+(* [get_cont_bonus st] returns an int representing how many troops
+   * are on a continent *)
+val get_cont_bonus: continent -> int
